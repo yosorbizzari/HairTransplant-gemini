@@ -30,7 +30,7 @@ const WriteReviewPage: React.FC<WriteReviewPageProps> = ({ clinic, user, setView
         setError('');
         onSubmitReview({
             clinicId: clinic.id,
-            userId: user.id,
+            userId: user.uid,
             rating,
             comment,
             isAnonymous

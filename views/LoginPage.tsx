@@ -1,41 +1,41 @@
+
 import React, { useState } from 'react';
 import { View, User } from '../types';
 
 interface LoginPageProps {
-    onLogin: (user: User) => void;
-    onSignUp: (username: string) => { success: boolean; message: string; user?: User };
+    onLogin: (email: string, pass: string) => Promise<{ success: boolean; message: string; }>;
+    onSignUp: (name: string, email: string, pass: string) => Promise<{ success: boolean; message: string; }>;
     setView: (view: View) => void;
     reason: string;
-    users: User[];
 }
 
-const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onSignUp, setView, reason, users }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onSignUp, setView, reason }) => {
     const [isLoginView, setIsLoginView] = useState(true);
-    const [username, setUsername] = useState('');
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
 
         if (isLoginView) {
-            // Login Logic
-            const user = users.find(u => u.name.toLowerCase() === username.toLowerCase());
-            if (user) {
-                onLogin(user);
-            } else {
-                setError('User not found. Please check the username or sign up.');
+            const result = await onLogin(email, password);
+            if (!result.success) {
+                setError(result.message);
             }
         } else {
-            // Sign Up Logic
-            if (username.length < 3) {
+            if (name.length < 3) {
                 setError('Username must be at least 3 characters long.');
                 return;
             }
-            const result = onSignUp(username);
-            if (result.success && result.user) {
-                onLogin(result.user); // Auto-login after successful sign up
-            } else {
+            if (password.length < 6) {
+                setError('Password must be at least 6 characters long.');
+                return;
+            }
+            const result = await onSignUp(name, email, password);
+            if (!result.success) {
                 setError(result.message);
             }
         }
@@ -44,7 +44,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onSignUp, setView, reaso
     const toggleView = () => {
         setIsLoginView(!isLoginView);
         setError('');
-        setUsername('');
+        setName('');
+        setEmail('');
+        setPassword('');
     };
 
     return (
@@ -55,13 +57,37 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onSignUp, setView, reaso
                     <p className="mt-2 text-gray-600 text-center">{reason}</p>
 
                     <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+                        {!isLoginView && (
+                             <div>
+                                <label htmlFor="name" className="block text-sm font-medium text-gray-700">Username</label>
+                                <input 
+                                    type="text" 
+                                    id="name" 
+                                    value={name}
+                                    onChange={e => setName(e.target.value)}
+                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500" 
+                                    required 
+                                />
+                            </div>
+                        )}
                         <div>
-                            <label htmlFor="username" className="block text-sm font-medium text-gray-700">Username</label>
+                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email Address</label>
                             <input 
-                                type="text" 
-                                id="username" 
-                                value={username}
-                                onChange={e => setUsername(e.target.value)}
+                                type="email" 
+                                id="email" 
+                                value={email}
+                                onChange={e => setEmail(e.target.value)}
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500" 
+                                required 
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+                            <input 
+                                type="password" 
+                                id="password" 
+                                value={password}
+                                onChange={e => setPassword(e.target.value)}
                                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500" 
                                 required 
                             />

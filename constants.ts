@@ -2,11 +2,11 @@
 import { Clinic, City, Treatment, Tier, BlogPost, ProductReview, ProductCategory, ClaimRequest, User, Review } from './types';
 
 export const INITIAL_USERS: User[] = [
-    { id: 1, name: 'John D.' },
-    { id: 2, name: 'Ahmed K.' },
-    { id: 3, name: 'James B.' },
-    { id: 4, name: 'Chris P.' },
-    { id: 5, name: 'Maria G.' }
+    { uid: 'user1', name: 'John D.', email: 'john.d@example.com' },
+    { uid: 'user2', name: 'Ahmed K.', email: 'ahmed.k@example.com' },
+    { uid: 'user3', name: 'James B.', email: 'james.b@example.com' },
+    { uid: 'user4', name: 'Chris P.', email: 'chris.p@example.com' },
+    { uid: 'user5', name: 'Maria G.', email: 'maria.g@example.com' }
 ];
 
 export const TREATMENTS: Treatment[] = [
@@ -51,7 +51,7 @@ export const CLINICS: Clinic[] = [
         longDescription: 'EstePrime Clinic has been at the forefront of hair restoration for over a decade. Our state-of-the-art facility and experienced surgeons ensure you receive the best care possible. We specialize in natural-looking results with minimal downtime.',
         treatments: [1, 2, 4],
         contact: { phone: '+90 123 456 7890', website: 'esteprime.com' },
-        reviews: [{ id: 1, userId: 1, clinicId: 1, rating: 5, comment: 'Life-changing experience. The staff was incredible.', date: '2023-10-15', status: 'approved' }],
+        reviews: [{ id: 1, userId: 'user1', clinicId: 1, rating: 5, comment: 'Life-changing experience. The staff was incredible.', date: '2023-10-15', status: 'approved' }],
         imageUrl: 'https://picsum.photos/800/600?random=1',
         galleryImages: ['https://picsum.photos/800/600?random=40', 'https://picsum.photos/800/600?random=41', 'https://picsum.photos/800/600?random=42'],
         videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
@@ -98,7 +98,7 @@ export const CLINICS: Clinic[] = [
         longDescription: 'Experience the future of hair transplantation in Dubai. Our clinic uses the latest robotic technology for unparalleled precision and density, all within a luxurious and private setting.',
         treatments: [1, 2],
         contact: { phone: '+971 4 555 9876', website: 'dubaihairexperts.ae' },
-        reviews: [{ id: 2, userId: 2, clinicId: 3, rating: 5, comment: 'The best decision I ever made. Flawless results.', date: '2023-08-10', status: 'approved' }],
+        reviews: [{ id: 2, userId: 'user2', clinicId: 3, rating: 5, comment: 'The best decision I ever made. Flawless results.', date: '2023-08-10', status: 'approved' }],
         imageUrl: 'https://picsum.photos/800/600?random=3',
         galleryImages: [],
         videoUrl: '',
@@ -349,7 +349,7 @@ export const CLINICS: Clinic[] = [
         longDescription: 'Located in the heart of London\'s medical district, our clinic provides comprehensive solutions for hair loss, from surgical transplantation to non-invasive treatments like SMP and PRP therapy.',
         treatments: [1, 3, 4],
         contact: { phone: '+44 20 7123 4567', website: 'londonscalp.co.uk' },
-        reviews: [{ id: 3, userId: 3, clinicId: 13, rating: 4, comment: 'Good results, but the waiting list was quite long.', date: '2023-05-19', status: 'approved' }],
+        reviews: [{ id: 3, userId: 'user3', clinicId: 13, rating: 4, comment: 'Good results, but the waiting list was quite long.', date: '2023-05-19', status: 'approved' }],
         imageUrl: 'https://picsum.photos/800/600?random=5',
         galleryImages: [],
         videoUrl: '',
@@ -396,7 +396,7 @@ export const CLINICS: Clinic[] = [
         longDescription: 'At LA Hair Institute, we combine artistry with science to create undetectable hair transplants. Our team is dedicated to providing personalized treatment plans to meet your specific goals.',
         treatments: [1, 3, 4],
         contact: { phone: '+1 310 555 0123', website: 'lahair.com' },
-        reviews: [{ id: 4, userId: 4, clinicId: 15, rating: 5, comment: 'Felt like a VIP. The results are amazing.', date: '2023-11-01', status: 'approved' }],
+        reviews: [{ id: 4, userId: 'user4', clinicId: 15, rating: 5, comment: 'Felt like a VIP. The results are amazing.', date: '2023-11-01', status: 'approved' }],
         imageUrl: 'https://picsum.photos/800/600?random=2',
         galleryImages: [],
         videoUrl: '',
@@ -883,7 +883,7 @@ export const PENDING_CLAIMS: ClaimRequest[] = [
 export const PENDING_REVIEWS: Review[] = [
     {
         id: 101,
-        userId: 5,
+        userId: 'user5',
         clinicId: 16, // SoCal Hair Restoration
         rating: 5,
         comment: 'Absolutely fantastic service from start to finish. The team at SoCal Hair Restoration made me feel comfortable and the results are better than I could have imagined. Highly recommend!',

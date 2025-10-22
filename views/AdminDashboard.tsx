@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { CITIES, TREATMENTS } from '../constants';
 import { Clinic, View, Tier, BlogPost, ProductReview, ClaimRequest, Review, User } from '../types';
@@ -502,7 +503,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ setView, clinics, blogs
                                         {pendingReviews.map(review => (
                                             <tr key={review.id}>
                                                 <td className="px-6 py-4 whitespace-nowrap font-medium">{clinics.find(c => c.id === review.clinicId)?.name}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap">{users.find(u => u.id === review.userId)?.name}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap">{users.find(u => u.uid === review.userId)?.name}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap">{review.rating} ★</td>
                                                 <td className="px-6 py-4 text-sm text-gray-600 max-w-sm truncate">{review.comment}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-4">

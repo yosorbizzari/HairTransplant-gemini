@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { PRICING_TIERS, CUSTOM_SERVICE } from '../constants';
 import CheckIcon from '../components/icons/CheckIcon';
@@ -13,7 +12,7 @@ const PricingPage: React.FC<PricingPageProps> = ({ setView }) => {
     return (
         <div className="bg-gray-50 py-12">
             <div className="container mx-auto px-6 text-center">
-                <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">Grow Your Clinic with HairDirect</h1>
+                <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">Grow Your Clinic with Transplantify</h1>
                 <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">Choose a plan that fits your needs and start connecting with patients actively seeking treatment.</p>
             </div>
 

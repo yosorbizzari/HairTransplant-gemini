@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Clinic, View, User, Tier } from '../types';
 import { TREATMENTS } from '../constants';
@@ -31,8 +32,8 @@ const ClinicDetail: React.FC<ClinicDetailProps> = ({ clinic, setView, currentUse
         }
     };
     
-    const getUserName = (userId: number) => {
-        return users.find(u => u.id === userId)?.name || 'A Patient';
+    const getUserName = (userId: string) => {
+        return users.find(u => u.uid === userId)?.name || 'A Patient';
     };
 
     const getEmbedUrl = (url: string) => {

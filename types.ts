@@ -7,13 +7,14 @@ export enum Tier {
 }
 
 export interface User {
-    id: number;
+    uid: string;
     name: string;
+    email: string;
 }
 
 export interface Review {
     id: number;
-    userId: number;
+    userId: string; // Changed from number to string
     clinicId: number;
     rating: number;
     comment: string;

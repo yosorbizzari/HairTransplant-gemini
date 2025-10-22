@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { View, User } from '../types';
+import Logo from './icons/Logo';
 
 interface HeaderProps {
     setView: (view: View) => void;
@@ -12,14 +13,8 @@ const Header: React.FC<HeaderProps> = ({ setView, currentUser, onLogout }) => {
     return (
         <header className="bg-white shadow-md sticky top-0 z-50">
             <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
-                <div className="text-2xl font-bold text-teal-600 cursor-pointer" onClick={() => setView({ page: 'home' })}>
-                    <span className="flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mr-2 text-teal-500" viewBox="0 0 20 20" fill="currentColor">
-                           <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h.5a1.5 1.5 0 010 3H14a1 1 0 00-1 1v.5a1.5 1.5 0 01-3 0V9a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H9a1 1 0 001-1v-.5z" />
-                           <path d="M5.5 8.5A1.5 1.5 0 017 10v.5a1 1 0 001 1h.5a1.5 1.5 0 010 3H8a1 1 0 00-1 1v.5a1.5 1.5 0 01-3 0V15a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H3a1 1 0 001-1v-.5A1.5 1.5 0 015.5 8.5z" />
-                        </svg>
-                        HairDirect
-                    </span>
+                <div className="cursor-pointer" onClick={() => setView({ page: 'home' })}>
+                    <Logo />
                 </div>
                 <div className="hidden md:flex items-center space-x-6">
                     <a href="#" className="text-gray-600 hover:text-teal-600 transition-colors" onClick={(e) => { e.preventDefault(); setView({ page: 'home' }); }}>Home</a>

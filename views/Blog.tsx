@@ -13,7 +13,7 @@ const Blog: React.FC<BlogProps> = ({ setView, blogPosts }) => {
         <div className="bg-gray-50 min-h-screen">
             <div className="container mx-auto px-6 py-12">
                 <div className="text-center mb-12">
-                    <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">HairDirect Blog</h1>
+                    <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">Transplantify Blog</h1>
                     <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">Expert insights, patient guides, and the latest news in hair restoration.</p>
                 </div>
 

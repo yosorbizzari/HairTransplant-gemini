@@ -7,7 +7,7 @@ const Footer: React.FC = () => {
             <div className="container mx-auto px-6 py-12">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div>
-                        <h3 className="text-lg font-bold mb-4">HairDirect</h3>
+                        <h3 className="text-lg font-bold mb-4">Transplantify</h3>
                         <p className="text-gray-400">Your trusted guide to hair restoration clinics worldwide.</p>
                     </div>
                     <div>
@@ -27,7 +27,7 @@ const Footer: React.FC = () => {
                     </div>
                 </div>
                 <div className="mt-12 border-t border-gray-700 pt-8 text-center text-gray-400">
-                    <p>&copy; {new Date().getFullYear()} HairDirect. All rights reserved.</p>
+                    <p>&copy; {new Date().getFullYear()} Transplantify. All rights reserved.</p>
                     <p className="text-xs text-gray-500 mt-4 max-w-3xl mx-auto">
                         Disclaimer: Information on this site is for informational purposes only and does not constitute medical advice. We may earn a commission from affiliate links and sponsored placements. Please conduct your own thorough research before making any decisions.
                     </p>
