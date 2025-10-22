@@ -1,0 +1,7 @@
+{
+  "name": "Hair Transplant Clinic Directory",
+  "description": "A modern, scalable directory web app that lists verified hair transplant clinics across key cities, featuring AI-powered tools for clinics and detailed city guides.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
