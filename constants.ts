@@ -2,11 +2,13 @@
 import { Clinic, City, Treatment, Tier, BlogPost, ProductReview, ProductCategory, ClaimRequest, User, Review } from './types';
 
 export const INITIAL_USERS: User[] = [
-    { uid: 'user1', name: 'John D.', email: 'john.d@example.com' },
-    { uid: 'user2', name: 'Ahmed K.', email: 'ahmed.k@example.com' },
-    { uid: 'user3', name: 'James B.', email: 'james.b@example.com' },
-    { uid: 'user4', name: 'Chris P.', email: 'chris.p@example.com' },
-    { uid: 'user5', name: 'Maria G.', email: 'maria.g@example.com' }
+    { uid: 'admin-001', name: 'Admin User', email: 'admin@transplantify.com', role: 'admin', favoriteClinics: [] },
+    { uid: 'owner-001', name: 'Dr. Alan Farma', email: 'alan.farma@esteprime.com', role: 'clinic-owner', favoriteClinics: [] },
+    { uid: 'user1', name: 'John D.', email: 'john.d@example.com', role: 'patient', favoriteClinics: [] },
+    { uid: 'user2', name: 'Ahmed K.', email: 'ahmed.k@example.com', role: 'patient', favoriteClinics: [] },
+    { uid: 'user3', name: 'James B.', email: 'james.b@example.com', role: 'patient', favoriteClinics: [] },
+    { uid: 'user4', name: 'Chris P.', email: 'chris.p@example.com', role: 'patient', favoriteClinics: [] },
+    { uid: 'user5', name: 'Maria G.', email: 'maria.g@example.com', role: 'patient', favoriteClinics: [] }
 ];
 
 export const TREATMENTS: Treatment[] = [
@@ -40,6 +42,7 @@ export const CLINICS: Clinic[] = [
         id: 1,
         name: 'EstePrime Clinic',
         tier: Tier.GOLD,
+        ownerId: 'owner-001',
         city: 'Istanbul',
         country: 'Turkey',
         address: '123 Hair St, Sisli, Istanbul',

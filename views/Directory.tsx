@@ -1,12 +1,15 @@
 
 import React, { useState } from 'react';
 import { CITIES, TREATMENTS } from '../constants';
-import { View, Clinic } from '../types';
+import { View, Clinic, User } from '../types';
 import ClinicCard from '../components/ClinicCard';
 
 interface DirectoryProps {
     setView: (view: View) => void;
     clinics: Clinic[];
+    currentUser: User | null;
+    onToggleFavorite: (clinicId: number) => void;
+    requestLogin: (redirectView: View) => void;
     initialFilters?: {
         searchTerm?: string;
         city?: string;
@@ -14,7 +17,7 @@ interface DirectoryProps {
     };
 }
 
-const Directory: React.FC<DirectoryProps> = ({ setView, clinics, initialFilters = {} }) => {
+const Directory: React.FC<DirectoryProps> = ({ setView, clinics, currentUser, onToggleFavorite, requestLogin, initialFilters = {} }) => {
     const [searchTerm, setSearchTerm] = useState(initialFilters.searchTerm || '');
     const [city, setCity] = useState(initialFilters.city || 'All Cities');
     const [treatment, setTreatment] = useState(initialFilters.treatment || 'Any Treatment');
@@ -65,7 +68,7 @@ const Directory: React.FC<DirectoryProps> = ({ setView, clinics, initialFilters 
                 {filteredClinics.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {filteredClinics.map(clinic => (
-                            <ClinicCard key={clinic.id} clinic={clinic} setView={setView} />
+                            <ClinicCard key={clinic.id} clinic={clinic} setView={setView} currentUser={currentUser} onToggleFavorite={onToggleFavorite} requestLogin={requestLogin} />
                         ))}
                     </div>
                 ) : (

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { CITIES } from '../constants';
-import { View, Clinic, Tier } from '../types';
+import { View, Clinic, Tier, User } from '../types';
 import ClinicCard from '../components/ClinicCard';
 import FeaturedCarousel from '../components/FeaturedCarousel';
 
@@ -9,9 +9,12 @@ interface CityPageProps {
     cityName: string;
     setView: (view: View) => void;
     clinics: Clinic[];
+    currentUser: User | null;
+    onToggleFavorite: (clinicId: number) => void;
+    requestLogin: (redirectView: View) => void;
 }
 
-const CityPage: React.FC<CityPageProps> = ({ cityName, setView, clinics }) => {
+const CityPage: React.FC<CityPageProps> = ({ cityName, setView, clinics, currentUser, onToggleFavorite, requestLogin }) => {
     const city = CITIES.find(c => c.name === cityName);
     const clinicsInCity = clinics.filter(c => c.city === cityName);
     
@@ -53,7 +56,7 @@ const CityPage: React.FC<CityPageProps> = ({ cityName, setView, clinics }) => {
                 {featuredClinicsInCity.length > 0 && (
                     <div className="mb-16">
                         <h2 className="text-3xl font-bold text-center mb-10 px-6">Featured Clinics in {city.name}</h2>
-                        <FeaturedCarousel clinics={featuredClinicsInCity} setView={setView} />
+                        <FeaturedCarousel clinics={featuredClinicsInCity} setView={setView} currentUser={currentUser} onToggleFavorite={onToggleFavorite} requestLogin={requestLogin} />
                     </div>
                 )}
 
@@ -63,7 +66,7 @@ const CityPage: React.FC<CityPageProps> = ({ cityName, setView, clinics }) => {
                      {clinicsInCity.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             {clinicsInCity.map(clinic => (
-                                <ClinicCard key={clinic.id} clinic={clinic} setView={setView} />
+                                <ClinicCard key={clinic.id} clinic={clinic} setView={setView} currentUser={currentUser} onToggleFavorite={onToggleFavorite} requestLogin={requestLogin} />
                             ))}
                         </div>
                     ) : (

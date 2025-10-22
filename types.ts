@@ -10,11 +10,13 @@ export interface User {
     uid: string;
     name: string;
     email: string;
+    role: 'admin' | 'clinic-owner' | 'patient';
+    favoriteClinics?: number[];
 }
 
 export interface Review {
     id: number;
-    userId: string; // Changed from number to string
+    userId: string; 
     clinicId: number;
     rating: number;
     comment: string;
@@ -56,6 +58,7 @@ export interface Clinic {
     aggregatedReviewCount?: number;
     reviewSource?: string;
     reviewSourceUrl?: string;
+    ownerId?: string;
 }
 
 export interface City {
@@ -109,6 +112,6 @@ export interface Breadcrumb {
 }
 
 export interface View {
-    page: 'home' | 'directory' | 'clinic' | 'city' | 'admin' | 'pricing' | 'blog' | 'blogDetail' | 'products' | 'productDetail' | 'claimListing' | 'login' | 'writeReview';
+    page: 'home' | 'directory' | 'clinic' | 'city' | 'admin' | 'pricing' | 'blog' | 'blogDetail' | 'products' | 'productDetail' | 'claimListing' | 'login' | 'writeReview' | 'clinicDashboard' | 'patientDashboard';
     params?: Record<string, any>;
 }

@@ -1,14 +1,17 @@
 
 import React from 'react';
-import { Clinic, View } from '../types';
+import { Clinic, View, User } from '../types';
 import ClinicCard from './ClinicCard';
 
 interface FeaturedCarouselProps {
     clinics: Clinic[];
     setView: (view: View) => void;
+    currentUser: User | null;
+    onToggleFavorite: (clinicId: number) => void;
+    requestLogin: (redirectView: View) => void;
 }
 
-const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({ clinics, setView }) => {
+const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({ clinics, setView, currentUser, onToggleFavorite, requestLogin }) => {
     if (!clinics || clinics.length === 0) {
         return null;
     }
@@ -27,7 +30,13 @@ const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({ clinics, setView })
             >
                 {extendedClinics.map((clinic, index) => (
                     <div key={`${clinic.id}-${index}`} className="w-96 flex-shrink-0 px-4">
-                        <ClinicCard clinic={clinic} setView={setView} />
+                        <ClinicCard 
+                            clinic={clinic} 
+                            setView={setView} 
+                            currentUser={currentUser}
+                            onToggleFavorite={onToggleFavorite}
+                            requestLogin={requestLogin}
+                        />
                     </div>
                 ))}
             </div>

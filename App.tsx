@@ -8,6 +8,8 @@ import Directory from './views/Directory';
 import ClinicDetail from './views/ClinicDetail';
 import CityPage from './views/CityPage';
 import AdminDashboard from './views/AdminDashboard';
+import ClinicDashboard from './views/ClinicDashboard';
+import PatientDashboard from './views/PatientDashboard';
 import PricingPage from './views/PricingPage';
 import Blog from './views/Blog';
 import BlogDetail from './views/BlogDetail';
@@ -299,20 +301,51 @@ const App: React.FC = () => {
     };
 
     const handleApproveClaim = async (claimId: number) => {
-        const updatedClinicId = await firebaseService.approveClaim(claimId);
-        if (updatedClinicId) {
+        try {
+            const { updatedClinic, updatedUser } = await firebaseService.approveClaim(claimId);
+            
+            // Update clinic state
             setClinics(prevClinics => 
                 prevClinics.map(c => 
-                    c.id === updatedClinicId ? { ...c, verified: true } : c
+                    c.id === updatedClinic.id ? updatedClinic : c
                 )
             );
+            
+            // Update users state
+            setUsers(prevUsers => {
+                const userExists = prevUsers.some(u => u.uid === updatedUser.uid);
+                if (userExists) {
+                    return prevUsers.map(u => u.uid === updatedUser.uid ? updatedUser : u);
+                } else {
+                    return [...prevUsers, updatedUser];
+                }
+            });
+
+            // Update pending claims
             setPendingClaims(prevClaims => prevClaims.filter(c => c.id !== claimId));
+        } catch (error) {
+            console.error("Failed to approve claim:", error);
+            alert("Failed to approve claim.");
         }
     };
     
     const handleDenyClaim = async (claimId: number) => {
         await firebaseService.deleteClaim(claimId);
         setPendingClaims(prevClaims => prevClaims.filter(c => c.id !== claimId));
+    };
+
+    const handleToggleFavorite = async (clinicId: number) => {
+        if (!currentUser) {
+            requestLogin({ page: 'directory' }); // Redirect to directory after login
+            return;
+        }
+        try {
+            const updatedUser = await firebaseService.toggleFavoriteClinic(currentUser.uid, clinicId);
+            setCurrentUser(updatedUser);
+            setUsers(prevUsers => prevUsers.map(u => u.uid === updatedUser.uid ? updatedUser : u));
+        } catch (error) {
+            alert('Failed to update favorites.');
+        }
     };
 
     const renderView = () => {
@@ -327,22 +360,31 @@ const App: React.FC = () => {
         const showBreadcrumbs = ['clinic', 'city', 'blogDetail', 'productDetail'].includes(view.page);
         
         const mainContent = () => {
+            const commonProps = { setView, currentUser, requestLogin, onToggleFavorite: handleToggleFavorite };
+            
             switch (view.page) {
-                case 'home': return <Home setView={setView} clinics={clinics} />;
-                case 'directory': return <Directory setView={setView} initialFilters={view.params} clinics={clinics} />;
+                case 'home': return <Home {...commonProps} clinics={clinics} />;
+                case 'directory': return <Directory {...commonProps} initialFilters={view.params} clinics={clinics} />;
                 case 'clinic':
                     const clinic = clinics.find(c => c.id === view.params?.id);
                     if (clinic) return <ClinicDetail clinic={clinic} setView={setView} currentUser={currentUser} requestLogin={requestLogin} users={users} />;
-                    return <Directory setView={setView} clinics={clinics} />;
+                    return <Directory {...commonProps} clinics={clinics} />;
                 case 'city':
-                    if (view.params?.cityName) return <CityPage cityName={view.params.cityName} setView={setView} clinics={clinics} />;
-                    return <Home setView={setView} clinics={clinics} />;
+                    if (view.params?.cityName) return <CityPage cityName={view.params.cityName} {...commonProps} clinics={clinics} />;
+                    return <Home {...commonProps} clinics={clinics} />;
                 case 'admin':
+                    if (currentUser?.role !== 'admin') return <Home {...commonProps} clinics={clinics} />; // Security check
                     return <AdminDashboard 
                         setView={setView} clinics={clinics} blogs={blogPosts} products={productReviews} claims={pendingClaims} pendingReviews={pendingReviews} users={users}
                         onSaveClinic={handleSaveClinic} onSaveBlog={handleSaveBlog} onSaveProduct={handleSaveProduct} onDeleteBlog={handleDeleteBlog} onDeleteProduct={handleDeleteProduct}
                         onApproveClaim={handleApproveClaim} onDenyClaim={handleDenyClaim} onApproveReview={handleApproveReview} onDenyReview={handleDenyReview}
                     />;
+                case 'clinicDashboard':
+                    if (currentUser?.role !== 'clinic-owner') return <Home {...commonProps} clinics={clinics} />; // Security check
+                    return <ClinicDashboard currentUser={currentUser} clinics={clinics} setView={setView} onSaveClinic={handleSaveClinic} />;
+                case 'patientDashboard':
+                    if (!currentUser || currentUser.role !== 'patient') return <Home {...commonProps} clinics={clinics} />; // Security check
+                    return <PatientDashboard currentUser={currentUser} clinics={clinics} pendingReviews={pendingReviews} {...commonProps} />;
                 case 'pricing': return <PricingPage setView={setView} />;
                 case 'blog': return <Blog setView={setView} blogPosts={blogPosts} />;
                 case 'blogDetail':
@@ -357,16 +399,16 @@ const App: React.FC = () => {
                 case 'claimListing':
                      const clinicToClaim = clinics.find(c => c.id === view.params?.id);
                      if (clinicToClaim) return <ClaimListingPage clinic={clinicToClaim} setView={setView} onClaimSubmit={handleClaimSubmit} />;
-                     return <Directory setView={setView} clinics={clinics} />;
+                     return <Directory {...commonProps} clinics={clinics} />;
                 case 'login':
-                    const reason = loginRedirectView ? 'You need to be logged in to leave a review.' : 'Log in to your account to continue.';
+                    const reason = loginRedirectView ? 'You need to be logged in to perform this action.' : 'Log in to your account to continue.';
                     return <LoginPage setView={setView} onLogin={handleLogin} onSignUp={handleSignUp} reason={reason} />;
                 case 'writeReview':
                     const clinicForReview = clinics.find(c => c.id === view.params?.clinicId);
                     if (clinicForReview && currentUser) return <WriteReviewPage clinic={clinicForReview} user={currentUser} setView={setView} onSubmitReview={handleSubmitReview} />;
-                    return <Directory setView={setView} clinics={clinics} />;
+                    return <Directory {...commonProps} clinics={clinics} />;
                 default:
-                    return <Home setView={setView} clinics={clinics} />;
+                    return <Home {...commonProps} clinics={clinics} />;
             }
         };
 

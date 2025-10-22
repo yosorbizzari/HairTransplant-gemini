@@ -1,14 +1,18 @@
 
 
 import React from 'react';
-import { Clinic, Tier, View } from '../types';
+import { Clinic, Tier, View, User } from '../types';
 import StarIcon from './icons/StarIcon';
 import MapPinIcon from './icons/MapPinIcon';
 import CheckIcon from './icons/CheckIcon';
+import HeartIcon from './icons/HeartIcon';
 
 interface ClinicCardProps {
     clinic: Clinic;
     setView: (view: View) => void;
+    currentUser: User | null;
+    onToggleFavorite: (clinicId: number) => void;
+    requestLogin: (redirectView: View) => void;
 }
 
 const TierBadge: React.FC<{ tier: Tier }> = ({ tier }) => {
@@ -40,15 +44,36 @@ const VerifiedBadge: React.FC = () => (
 );
 
 
-const ClinicCard: React.FC<ClinicCardProps> = ({ clinic, setView }) => {
+const ClinicCard: React.FC<ClinicCardProps> = ({ clinic, setView, currentUser, onToggleFavorite, requestLogin }) => {
+    
+    const isFavorite = currentUser?.favoriteClinics?.includes(clinic.id) ?? false;
+    
+    const handleFavoriteClick = (e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent card click from firing
+        if (!currentUser) {
+            requestLogin({ page: 'directory' });
+        } else {
+            onToggleFavorite(clinic.id);
+        }
+    };
+    
     return (
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden transform hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 ease-in-out cursor-pointer" onClick={() => setView({ page: 'clinic', params: { id: clinic.id } })}>
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden transform hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 ease-in-out">
             <div className="relative">
-                <img className="w-full h-56 object-cover" src={clinic.imageUrl} alt={clinic.name} />
+                <div className="cursor-pointer" onClick={() => setView({ page: 'clinic', params: { id: clinic.id } })}>
+                    <img className="w-full h-56 object-cover" src={clinic.imageUrl} alt={clinic.name} />
+                </div>
                 <TierBadge tier={clinic.tier} />
                 {clinic.verified && <VerifiedBadge />}
+                <button 
+                    onClick={handleFavoriteClick}
+                    className="absolute bottom-4 right-4 bg-white/80 backdrop-blur-sm rounded-full p-2 text-red-500 hover:bg-white transition-colors"
+                    aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                >
+                    <HeartIcon filled={isFavorite} />
+                </button>
             </div>
-            <div className="p-6">
+            <div className="p-6 cursor-pointer" onClick={() => setView({ page: 'clinic', params: { id: clinic.id } })}>
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">{clinic.name}</h3>
                 <div className="flex items-center text-gray-600 mb-4">
                     <MapPinIcon className="w-5 h-5 mr-2 text-gray-400" />

@@ -1,15 +1,18 @@
 
 import React from 'react';
 import { CITIES, TREATMENTS } from '../constants';
-import { View, Clinic } from '../types';
+import { View, Clinic, User } from '../types';
 import FeaturedCarousel from '../components/FeaturedCarousel';
 
 interface HomeProps {
     setView: (view: View) => void;
     clinics: Clinic[];
+    currentUser: User | null;
+    onToggleFavorite: (clinicId: number) => void;
+    requestLogin: (redirectView: View) => void;
 }
 
-const Home: React.FC<HomeProps> = ({ setView, clinics }) => {
+const Home: React.FC<HomeProps> = ({ setView, clinics, currentUser, onToggleFavorite, requestLogin }) => {
     // Get all gold partners and shuffle them for fairness.
     // useMemo ensures the list doesn't re-shuffle on every render, only when the clinics data changes.
     const shuffledGoldClinics = React.useMemo(() => 
@@ -62,7 +65,7 @@ const Home: React.FC<HomeProps> = ({ setView, clinics }) => {
                 <div className="container mx-auto">
                     <h2 className="text-3xl font-bold text-center mb-2 px-6">Featured Gold Partners</h2>
                     <p className="text-center text-gray-600 mb-10 px-6">Top-tier clinics with exceptional reviews and services.</p>
-                    <FeaturedCarousel clinics={shuffledGoldClinics} setView={setView} />
+                    <FeaturedCarousel clinics={shuffledGoldClinics} setView={setView} currentUser={currentUser} onToggleFavorite={onToggleFavorite} requestLogin={requestLogin} />
                 </div>
             </div>
 
