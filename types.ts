@@ -102,6 +102,11 @@ export interface ClaimRequest {
     status: 'pending';
 }
 
+export interface Breadcrumb {
+    name: string;
+    view: View;
+}
+
 export interface View {
     page: 'home' | 'directory' | 'clinic' | 'city' | 'admin' | 'pricing' | 'blog' | 'blogDetail' | 'products' | 'productDetail' | 'claimListing' | 'login' | 'writeReview';
     params?: Record<string, any>;
