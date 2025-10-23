@@ -1,5 +1,5 @@
 
-import { Clinic, City, Treatment, Tier, BlogPost, ProductReview, ProductCategory, ClaimRequest, User, Review } from './types';
+import { Clinic, City, Treatment, Tier, BlogPost, ProductReview, ProductCategory, ClaimRequest, User, Review, NewsletterSubscriber } from './types';
 
 export const INITIAL_USERS: User[] = [
     { uid: 'admin-001', name: 'Admin User', email: 'admin@transplantify.com', role: 'admin', favoriteClinics: [] },
@@ -59,6 +59,8 @@ export const CLINICS: Clinic[] = [
         galleryImages: ['https://picsum.photos/800/600?random=40', 'https://picsum.photos/800/600?random=41', 'https://picsum.photos/800/600?random=42'],
         videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
         verified: true,
+        subscriptionStatus: 'active',
+        stripeCustomerId: 'cus_123456789'
     },
     {
         id: 2,
@@ -893,4 +895,8 @@ export const PENDING_REVIEWS: Review[] = [
         date: new Date().toISOString().split('T')[0],
         status: 'pending'
     }
+];
+
+export const INITIAL_SUBSCRIBERS: NewsletterSubscriber[] = [
+    { id: 1, email: 'early.adopter@email.com', subscribedAt: '2024-01-01' }
 ];

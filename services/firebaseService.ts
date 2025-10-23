@@ -1,19 +1,24 @@
+import { Clinic, BlogPost, ProductReview, ClaimRequest, User, Review, Treatment, City, NewsletterSubscriber, Tier } from '../types';
+import { CLINICS, BLOG_POSTS, PRODUCT_REVIEWS, PENDING_CLAIMS, INITIAL_USERS, PENDING_REVIEWS, TREATMENTS, CITIES, INITIAL_SUBSCRIBERS } from '../constants';
 
-import { Clinic, BlogPost, ProductReview, ClaimRequest, User, Review, Treatment, City } from '../types';
-import { CLINICS, BLOG_POSTS, PRODUCT_REVIEWS, PENDING_CLAIMS, INITIAL_USERS, PENDING_REVIEWS, TREATMENTS, CITIES } from '../constants';
+// --- DEEP CLONE UTILITY ---
+// This is crucial for preventing state mutation bugs in our simulation.
+// Every function that modifies data should return a new object.
+const deepClone = <T>(obj: T): T => JSON.parse(JSON.stringify(obj));
 
 // --- DATABASE SIMULATION ---
 // In a real app, this would be your Firestore database.
 // We're using local variables to simulate the database state.
 let db = {
-    clinics: [...CLINICS],
-    blogPosts: [...BLOG_POSTS],
-    productReviews: [...PRODUCT_REVIEWS],
-    pendingClaims: [...PENDING_CLAIMS],
-    users: [...INITIAL_USERS],
-    pendingReviews: [...PENDING_REVIEWS],
-    treatments: [...TREATMENTS],
-    cities: [...CITIES],
+    clinics: deepClone(CLINICS),
+    blogPosts: deepClone(BLOG_POSTS),
+    productReviews: deepClone(PRODUCT_REVIEWS),
+    pendingClaims: deepClone(PENDING_CLAIMS),
+    users: deepClone(INITIAL_USERS),
+    pendingReviews: deepClone(PENDING_REVIEWS),
+    treatments: deepClone(TREATMENTS),
+    cities: deepClone(CITIES),
+    newsletterSubscribers: deepClone(INITIAL_SUBSCRIBERS),
 };
 
 // --- AUTH SIMULATION ---
@@ -28,7 +33,8 @@ export const firebaseService = {
     getInitialData: async () => {
         await networkDelay(1000); // Simulate fetching initial data
         console.log("Firebase Service: Fetched initial data.");
-        return {
+        // Return clones to prevent direct mutation of the source of truth
+        return deepClone({
             clinics: db.clinics,
             blogPosts: db.blogPosts,
             productReviews: db.productReviews,
@@ -36,7 +42,8 @@ export const firebaseService = {
             users: db.users,
             pendingReviews: db.pendingReviews,
             currentUser: currentAuthUser,
-        };
+            newsletterSubscribers: db.newsletterSubscribers,
+        });
     },
 
     signUp: async (name: string, email: string, password: string): Promise<User> => {
@@ -51,20 +58,19 @@ export const firebaseService = {
             role: 'patient', // New users default to 'patient' role
             favoriteClinics: [],
         };
-        db.users.push(newUser);
-        currentAuthUser = newUser; // Auto-login
+        db.users = [...db.users, newUser];
+        currentAuthUser = deepClone(newUser); // Auto-login
         console.log("Firebase Service: Signed up and logged in new user.", newUser);
-        return newUser;
+        return deepClone(newUser);
     },
 
     login: async (email: string, password: string): Promise<User> => {
         await networkDelay(500);
         const user = db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
-        // In a real app, you'd also check the password hash.
         if (user) {
-            currentAuthUser = user;
+            currentAuthUser = deepClone(user);
             console.log("Firebase Service: Logged in user.", user);
-            return user;
+            return deepClone(user);
         } else {
             throw new Error("Authentication failed: User not found or password incorrect.");
         }
@@ -84,26 +90,31 @@ export const firebaseService = {
             date: new Date().toISOString().split('T')[0],
             status: 'pending'
         };
-        db.pendingReviews.unshift(newReview);
+        db.pendingReviews = [newReview, ...db.pendingReviews];
         console.log("Firebase Service: Submitted new review for moderation.", newReview);
-        return newReview;
+        return deepClone(newReview);
     },
 
     approveReview: async (reviewId: number): Promise<Review> => {
         await networkDelay(300);
-        const review = db.pendingReviews.find(r => r.id === reviewId);
-        if (!review) throw new Error("Review not found in pending list.");
+        const reviewIndex = db.pendingReviews.findIndex(r => r.id === reviewId);
+        if (reviewIndex === -1) throw new Error("Review not found in pending list.");
 
-        const approvedReview = { ...review, status: 'approved' as const };
+        const reviewToApprove = db.pendingReviews[reviewIndex];
+        const approvedReview = { ...deepClone(reviewToApprove), status: 'approved' as const };
         
-        db.clinics = db.clinics.map(c => 
-            c.id === review.clinicId 
-                ? { ...c, reviews: [approvedReview, ...c.reviews] } 
-                : c
-        );
+        db.clinics = db.clinics.map(clinic => {
+            if (clinic.id === approvedReview.clinicId) {
+                const newClinic = deepClone(clinic);
+                newClinic.reviews.unshift(approvedReview);
+                return newClinic;
+            }
+            return clinic;
+        });
+        
         db.pendingReviews = db.pendingReviews.filter(r => r.id !== reviewId);
         console.log("Firebase Service: Approved review.", approvedReview);
-        return approvedReview;
+        return deepClone(approvedReview);
     },
 
     deleteReview: async (reviewId: number): Promise<void> => {
@@ -119,9 +130,9 @@ export const firebaseService = {
             id: Date.now(),
             status: 'pending'
         };
-        db.pendingClaims.unshift(newClaim);
+        db.pendingClaims = [newClaim, ...db.pendingClaims];
         console.log("Firebase Service: Submitted new claim.", newClaim);
-        return newClaim;
+        return deepClone(newClaim);
     },
     
     approveClaim: async (claimId: number) : Promise<{ updatedClinic: Clinic; updatedUser: User }> => {
@@ -129,43 +140,40 @@ export const firebaseService = {
         const claim = db.pendingClaims.find(c => c.id === claimId);
         if (!claim) throw new Error("Claim not found.");
 
-        let updatedClinic: Clinic | null = null;
-        let updatedUser: User | null = null;
-
-        // Find user by email from the claim
+        let finalUpdatedClinic: Clinic | null = null;
+        let finalUpdatedUser: User | null = null;
+        
         const userIndex = db.users.findIndex(u => u.email.toLowerCase() === claim.submitterEmail.toLowerCase());
         
         if (userIndex === -1) {
-            // If user doesn't exist, create one
-            updatedUser = {
-                uid: `user-${Date.now()}`,
-                name: claim.submitterName,
-                email: claim.submitterEmail,
-                role: 'clinic-owner',
-                favoriteClinics: [],
-            };
-            db.users.push(updatedUser);
+            const newUser: User = { uid: `user-${Date.now()}`, name: claim.submitterName, email: claim.submitterEmail, role: 'clinic-owner', favoriteClinics: [] };
+            db.users = [...db.users, newUser];
+            finalUpdatedUser = newUser;
         } else {
-            // If user exists, promote them
-            db.users[userIndex].role = 'clinic-owner';
-            updatedUser = db.users[userIndex];
+            const originalUser = db.users[userIndex];
+            const updatedUser = { ...deepClone(originalUser), role: 'clinic-owner' as const };
+            db.users = db.users.map(u => u.uid === updatedUser.uid ? updatedUser : u);
+            finalUpdatedUser = updatedUser;
         }
 
-        // Find clinic and assign owner
-        const clinicIndex = db.clinics.findIndex(c => c.id === claim.clinicId);
-        if (clinicIndex > -1) {
-            db.clinics[clinicIndex].verified = true;
-            db.clinics[clinicIndex].ownerId = updatedUser.uid;
-            updatedClinic = db.clinics[clinicIndex];
-        } else {
-            throw new Error("Clinic to be claimed not found.");
-        }
+        db.clinics = db.clinics.map(clinic => {
+            if (clinic.id === claim.clinicId) {
+                const updatedClinic = deepClone(clinic);
+                updatedClinic.verified = true;
+                updatedClinic.ownerId = finalUpdatedUser!.uid;
+                updatedClinic.tier = Tier.BASIC;
+                finalUpdatedClinic = updatedClinic;
+                return updatedClinic;
+            }
+            return clinic;
+        });
 
-        // Remove claim from pending list
+        if (!finalUpdatedClinic) throw new Error("Clinic to be claimed not found.");
+
         db.pendingClaims = db.pendingClaims.filter(c => c.id !== claimId);
         
-        console.log(`Firebase Service: Approved claim. User ${updatedUser.name} now owns ${updatedClinic.name}.`);
-        return { updatedClinic, updatedUser };
+        console.log(`Firebase Service: Approved claim. User ${finalUpdatedUser.name} now owns ${finalUpdatedClinic.name} (Tier: Basic).`);
+        return { updatedClinic: deepClone(finalUpdatedClinic), updatedUser: deepClone(finalUpdatedUser) };
     },
 
     deleteClaim: async (claimId: number): Promise<void> => {
@@ -175,45 +183,68 @@ export const firebaseService = {
     },
 
     saveClinic: async (clinicData: Clinic): Promise<Clinic> => {
-        await networkDelay(500);
-        const index = db.clinics.findIndex(c => c.id === clinicData.id);
-        if (index > -1) {
-            db.clinics[index] = clinicData;
-            console.log("Firebase Service: Updated clinic.", clinicData);
-        } else {
-            // In a real app, ID would be generated by Firestore
-            const newClinicWithId = { ...clinicData, id: Date.now() };
-            db.clinics.unshift(newClinicWithId);
-             console.log("Firebase Service: Created new clinic.", newClinicWithId);
-             return newClinicWithId;
+        await networkDelay(500); // Base delay for DB write
+        
+        const isBase64 = (str: string) => str && str.startsWith('data:image');
+        let clinicToSave = deepClone(clinicData);
+    
+        // Simulate uploading the main image
+        if (isBase64(clinicToSave.imageUrl)) {
+            console.log("Firebase Service: Detected Base64 main image. Uploading...");
+            clinicToSave.imageUrl = await firebaseService.uploadFile(clinicToSave.imageUrl);
         }
-        return clinicData;
+    
+        // Simulate uploading gallery images
+        if (clinicToSave.galleryImages && clinicToSave.galleryImages.length > 0) {
+            const uploadedGalleryImages = await Promise.all(
+                clinicToSave.galleryImages.map(img => {
+                    if (isBase64(img)) {
+                        console.log("Firebase Service: Detected Base64 gallery image. Uploading...");
+                        return firebaseService.uploadFile(img);
+                    }
+                    return Promise.resolve(img); // Return existing URL
+                })
+            );
+            clinicToSave.galleryImages = uploadedGalleryImages.filter(url => url); // Filter out empty strings
+        }
+
+        const index = db.clinics.findIndex(c => c.id === clinicToSave.id);
+        
+        if (index > -1) {
+            db.clinics = db.clinics.map(c => c.id === clinicToSave.id ? clinicToSave : c);
+            console.log("Firebase Service: Updated clinic.", clinicToSave);
+        } else {
+            clinicToSave.id = Date.now();
+            db.clinics = [clinicToSave, ...db.clinics];
+            console.log("Firebase Service: Created new clinic.", clinicToSave);
+        }
+        return deepClone(clinicToSave);
     },
 
     saveBlogPost: async (blogData: BlogPost): Promise<BlogPost> => {
         await networkDelay(500);
-        const index = db.blogPosts.findIndex(b => b.id === blogData.id);
+        const postToSave = deepClone(blogData);
+        const index = db.blogPosts.findIndex(b => b.id === postToSave.id);
         if (index > -1) {
-            db.blogPosts[index] = blogData;
+            db.blogPosts = db.blogPosts.map(b => b.id === postToSave.id ? postToSave : b);
         } else {
-            const newPost = { ...blogData, id: Date.now() };
-            db.blogPosts.unshift(newPost);
-            return newPost;
+            postToSave.id = Date.now();
+            db.blogPosts = [postToSave, ...db.blogPosts];
         }
-        return blogData;
+        return deepClone(postToSave);
     },
 
     saveProductReview: async (productData: ProductReview): Promise<ProductReview> => {
         await networkDelay(500);
-        const index = db.productReviews.findIndex(p => p.id === productData.id);
+        const productToSave = deepClone(productData);
+        const index = db.productReviews.findIndex(p => p.id === productToSave.id);
         if (index > -1) {
-            db.productReviews[index] = productData;
+            db.productReviews = db.productReviews.map(p => p.id === productToSave.id ? productToSave : p);
         } else {
-            const newProduct = { ...productData, id: Date.now() };
-            db.productReviews.unshift(newProduct);
-            return newProduct;
+            productToSave.id = Date.now();
+            db.productReviews = [productToSave, ...db.productReviews];
         }
-        return productData;
+        return deepClone(productToSave);
     },
     
     deleteBlog: async (blogId: number): Promise<void> => {
@@ -227,33 +258,85 @@ export const firebaseService = {
     },
     
     uploadFile: async (fileDataUrl: string): Promise<string> => {
-        await networkDelay(800);
-        console.log("Firebase Service: 'Uploaded' file, returning data URL.");
-        return fileDataUrl;
+        await networkDelay(1200); // Simulate a slightly longer upload time
+        const placeholderUrl = `https://picsum.photos/800/600?random=${Date.now()}`;
+        console.log(`Firebase Service: 'Uploaded' file, returning placeholder URL: ${placeholderUrl}`);
+        return placeholderUrl;
     },
 
     toggleFavoriteClinic: async (userId: string, clinicId: number): Promise<User> => {
         await networkDelay(200);
         const userIndex = db.users.findIndex(u => u.uid === userId);
-        if (userIndex === -1) {
-            throw new Error("User not found.");
-        }
+        if (userIndex === -1) throw new Error("User not found.");
+        
         const user = db.users[userIndex];
         const favorites = user.favoriteClinics || [];
         const isFavorite = favorites.includes(clinicId);
         
-        if (isFavorite) {
-            user.favoriteClinics = favorites.filter(id => id !== clinicId);
-        } else {
-            user.favoriteClinics = [...favorites, clinicId];
-        }
+        const updatedUser = {
+            ...deepClone(user),
+            favoriteClinics: isFavorite ? favorites.filter(id => id !== clinicId) : [...favorites, clinicId]
+        };
+
+        db.users = db.users.map(u => u.uid === userId ? updatedUser : u);
         
-        db.users[userIndex] = user;
         if (currentAuthUser?.uid === userId) {
-            currentAuthUser = user;
+            currentAuthUser = deepClone(updatedUser);
         }
 
-        console.log("Firebase Service: Toggled favorite for user.", user);
-        return user;
-    }
+        console.log("Firebase Service: Toggled favorite for user.", updatedUser);
+        return deepClone(updatedUser);
+    },
+
+    subscribeToNewsletter: async (email: string): Promise<NewsletterSubscriber> => {
+        await networkDelay(400);
+        if (db.newsletterSubscribers.some(s => s.email.toLowerCase() === email.toLowerCase())) {
+            throw new Error("This email address is already subscribed.");
+        }
+        const newSubscriber: NewsletterSubscriber = { id: Date.now(), email, subscribedAt: new Date().toISOString().split('T')[0] };
+        db.newsletterSubscribers = [newSubscriber, ...db.newsletterSubscribers];
+        console.log("Firebase Service: New newsletter subscriber.", newSubscriber);
+        return deepClone(newSubscriber);
+    },
+
+    processSubscription: async (clinicId: number, tier: Tier): Promise<Clinic> => {
+        await networkDelay(1500);
+        let updatedClinic: Clinic | null = null;
+        db.clinics = db.clinics.map(c => {
+            if (c.id === clinicId) {
+                updatedClinic = {
+                    ...deepClone(c),
+                    tier,
+                    subscriptionStatus: 'active',
+                    stripeCustomerId: c.stripeCustomerId || `cus_${Date.now()}`
+                };
+                return updatedClinic;
+            }
+            return c;
+        });
+
+        if (!updatedClinic) throw new Error("Clinic not found for subscription.");
+        console.log(`Firebase Service: Processed subscription for ${updatedClinic.name} to ${tier} tier.`);
+        return deepClone(updatedClinic);
+    },
+
+    cancelSubscription: async (clinicId: number): Promise<Clinic> => {
+        await networkDelay(800);
+        let updatedClinic: Clinic | null = null;
+        db.clinics = db.clinics.map(c => {
+            if (c.id === clinicId) {
+                updatedClinic = {
+                    ...deepClone(c),
+                    tier: Tier.BASIC, // Revert to Basic on cancellation
+                    subscriptionStatus: 'canceled'
+                };
+                return updatedClinic;
+            }
+            return c;
+        });
+        
+        if (!updatedClinic) throw new Error("Clinic not found for cancellation.");
+        console.log(`Firebase Service: Canceled subscription for ${updatedClinic.name}.`);
+        return deepClone(updatedClinic);
+    },
 };

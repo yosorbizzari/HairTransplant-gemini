@@ -1,7 +1,6 @@
-
 import React, { useState, useMemo } from 'react';
 import { CITIES, TREATMENTS } from '../constants';
-import { Clinic, View, Tier, BlogPost, ProductReview, ClaimRequest, Review, User } from '../types';
+import { Clinic, View, Tier, BlogPost, ProductReview, ClaimRequest, Review, User, NewsletterSubscriber } from '../types';
 import { getReviewResponse, getOptimizedContent } from '../services/geminiService';
 import ImageInput from '../components/ImageInput';
 import ClinicEditor from '../components/ClinicEditor';
@@ -14,6 +13,7 @@ interface AdminDashboardProps {
     claims: ClaimRequest[];
     pendingReviews: Review[];
     users: User[];
+    subscribers: NewsletterSubscriber[];
     onSaveClinic: (clinic: Clinic) => void;
     onSaveBlog: (blog: BlogPost) => void;
     onSaveProduct: (product: ProductReview) => void;
@@ -23,6 +23,7 @@ interface AdminDashboardProps {
     onDenyClaim: (id: number) => void;
     onApproveReview: (id: number) => void;
     onDenyReview: (id: number) => void;
+    isSaving: boolean;
 }
 
 const AITool: React.FC<{ title: string; description: string; inputLabel: string; buttonText: string; onGenerate: (input: string) => Promise<string>; }> = ({ title, description, inputLabel, buttonText, onGenerate }) => {
@@ -157,7 +158,7 @@ const ProductEditor: React.FC<{ product: ProductReview | 'new', onSave: (product
 };
 
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ setView, clinics, blogs, products, claims, pendingReviews, users, onSaveClinic, onSaveBlog, onSaveProduct, onDeleteBlog, onDeleteProduct, onApproveClaim, onDenyClaim, onApproveReview, onDenyReview }) => {
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ setView, clinics, blogs, products, claims, pendingReviews, users, subscribers, onSaveClinic, onSaveBlog, onSaveProduct, onDeleteBlog, onDeleteProduct, onApproveClaim, onDenyClaim, onApproveReview, onDenyReview, isSaving }) => {
     const [activeTab, setActiveTab] = useState('claims');
     const [editingClinic, setEditingClinic] = useState<Clinic | 'new' | null>(null);
     const [editingBlog, setEditingBlog] = useState<BlogPost | 'new' | null>(null);
@@ -289,7 +290,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ setView, clinics, blogs
                 );
             case 'clinics':
                 return editingClinic ? (
-                    <ClinicEditor clinic={editingClinic} onSave={handleSaveClinic} onCancel={() => setEditingClinic(null)} mode="admin" />
+                    <ClinicEditor clinic={editingClinic} onSave={handleSaveClinic} onCancel={() => setEditingClinic(null)} mode="admin" isSaving={isSaving} />
                 ) : (
                     <div>
                         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
@@ -416,6 +417,30 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ setView, clinics, blogs
                         </div>
                     </div>
                 );
+            case 'subscribers':
+                return (
+                    <div>
+                        <h2 className="text-2xl font-bold mb-4">Newsletter Subscribers</h2>
+                        <div className="bg-white shadow-md rounded-lg overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email Address</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subscription Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {subscribers.map(sub => (
+                                        <tr key={sub.id}>
+                                            <td className="px-6 py-4 whitespace-nowrap font-medium">{sub.email}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap">{sub.subscribedAt}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                );
             case 'ai-tools':
                 return (
                      <div>
@@ -472,6 +497,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ setView, clinics, blogs
                     <TabButton id="clinics" label="Manage Clinics" />
                     <TabButton id="blogs" label="Manage Blogs" />
                     <TabButton id="products" label="Manage Products" />
+                    <TabButton id="subscribers" label="Subscribers" />
                     <TabButton id="ai-tools" label="AI Tools" />
                 </div>
                 <div>{renderContent()}</div>

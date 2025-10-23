@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Clinic, Tier } from '../types';
 import { CITIES, TREATMENTS } from '../constants';
@@ -11,9 +10,10 @@ interface ClinicEditorProps {
     onSave: (clinic: Clinic) => void;
     onCancel: () => void;
     mode: 'admin' | 'owner';
+    isSaving: boolean;
 }
 
-const ClinicEditor: React.FC<ClinicEditorProps> = ({ clinic, onSave, onCancel, mode }) => {
+const ClinicEditor: React.FC<ClinicEditorProps> = ({ clinic, onSave, onCancel, mode, isSaving }) => {
     const isNew = clinic === 'new';
     const initialFormData = isNew 
         ? {
@@ -137,7 +137,7 @@ const ClinicEditor: React.FC<ClinicEditorProps> = ({ clinic, onSave, onCancel, m
                                 className="flex items-center px-3 py-1 text-xs font-semibold text-teal-700 bg-teal-100 rounded-full hover:bg-teal-200 disabled:bg-gray-200 disabled:text-gray-500 transition-colors"
                             >
                                 {isOptimizing ? (
-                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
@@ -247,7 +247,9 @@ const ClinicEditor: React.FC<ClinicEditorProps> = ({ clinic, onSave, onCancel, m
                 </div>
                 <div className="col-span-2 flex justify-end space-x-4">
                     <button type="button" onClick={onCancel} className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400">Cancel</button>
-                    <button type="submit" className="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700">Save Clinic</button>
+                    <button type="submit" disabled={isSaving} className="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 disabled:bg-gray-400">
+                        {isSaving ? 'Saving...' : 'Save Clinic'}
+                    </button>
                 </div>
             </form>
         </div>

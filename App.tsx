@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useState, useEffect } from 'react';
 import Header from './components/Header';
@@ -18,16 +17,19 @@ import ProductDetail from './views/ProductDetail';
 import ClaimListingPage from './views/ClaimListingPage';
 import LoginPage from './views/LoginPage';
 import WriteReviewPage from './views/WriteReviewPage';
+import CheckoutPage from './views/CheckoutPage';
 import MetaTagManager from './components/MetaTagManager';
 import Schema from './components/Schema';
 import Breadcrumbs from './components/Breadcrumbs';
-import { View, Clinic, BlogPost, ProductReview, ClaimRequest, User, Review, Breadcrumb } from './types';
+import NewsletterModal from './components/NewsletterModal';
+import { View, Clinic, BlogPost, ProductReview, ClaimRequest, User, Review, Breadcrumb, NewsletterSubscriber, Tier } from './types';
 import { firebaseService } from './services/firebaseService';
 
 
 const App: React.FC = () => {
     const [view, setView] = useState<View>({ page: 'home' });
     const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
     
     // Data state
     const [clinics, setClinics] = useState<Clinic[]>([]);
@@ -36,10 +38,14 @@ const App: React.FC = () => {
     const [pendingClaims, setPendingClaims] = useState<ClaimRequest[]>([]);
     const [users, setUsers] = useState<User[]>([]);
     const [pendingReviews, setPendingReviews] = useState<Review[]>([]);
+    const [subscribers, setSubscribers] = useState<NewsletterSubscriber[]>([]);
     
     // Auth state
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [loginRedirectView, setLoginRedirectView] = useState<View | null>(null);
+
+    // UI State
+    const [isNewsletterModalOpen, setIsNewsletterModalOpen] = useState(false);
 
     // Initial data fetch
     useEffect(() => {
@@ -54,6 +60,7 @@ const App: React.FC = () => {
                 setUsers(data.users);
                 setPendingReviews(data.pendingReviews);
                 setCurrentUser(data.currentUser);
+                setSubscribers(data.newsletterSubscribers);
             } catch (error) {
                 console.error("Failed to load initial data:", error);
                 // Handle error state in UI
@@ -254,12 +261,20 @@ const App: React.FC = () => {
     };
 
     const handleSaveClinic = async (clinicToSave: Clinic) => {
-        const savedClinic = await firebaseService.saveClinic(clinicToSave);
-        const exists = clinics.some(c => c.id === savedClinic.id);
-        if (exists) {
-            setClinics(clinics.map(c => c.id === savedClinic.id ? savedClinic : c));
-        } else {
-            setClinics([savedClinic, ...clinics]);
+        setIsSaving(true);
+        try {
+            const savedClinic = await firebaseService.saveClinic(clinicToSave);
+            const exists = clinics.some(c => c.id === savedClinic.id);
+            if (exists) {
+                setClinics(clinics.map(c => c.id === savedClinic.id ? savedClinic : c));
+            } else {
+                setClinics([savedClinic, ...clinics]);
+            }
+        } catch (error) {
+            console.error("Failed to save clinic:", error);
+            alert("There was an error saving the clinic. Please try again.");
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -304,24 +319,19 @@ const App: React.FC = () => {
         try {
             const { updatedClinic, updatedUser } = await firebaseService.approveClaim(claimId);
             
-            // Update clinic state
             setClinics(prevClinics => 
                 prevClinics.map(c => 
                     c.id === updatedClinic.id ? updatedClinic : c
                 )
             );
             
-            // Update users state
             setUsers(prevUsers => {
                 const userExists = prevUsers.some(u => u.uid === updatedUser.uid);
-                if (userExists) {
-                    return prevUsers.map(u => u.uid === updatedUser.uid ? updatedUser : u);
-                } else {
-                    return [...prevUsers, updatedUser];
-                }
+                return userExists 
+                    ? prevUsers.map(u => u.uid === updatedUser.uid ? updatedUser : u)
+                    : [...prevUsers, updatedUser];
             });
 
-            // Update pending claims
             setPendingClaims(prevClaims => prevClaims.filter(c => c.id !== claimId));
         } catch (error) {
             console.error("Failed to approve claim:", error);
@@ -347,6 +357,35 @@ const App: React.FC = () => {
             alert('Failed to update favorites.');
         }
     };
+
+    const handleSubscribe = async (email: string) => {
+        try {
+            const newSubscriber = await firebaseService.subscribeToNewsletter(email);
+            setSubscribers(prev => [newSubscriber, ...prev]);
+            return { success: true };
+        } catch (error: any) {
+             return { success: false, message: error.message };
+        }
+    };
+
+    const handleProcessSubscription = async (clinicId: number, tier: Tier) => {
+        try {
+            const updatedClinic = await firebaseService.processSubscription(clinicId, tier);
+            setClinics(prev => prev.map(c => c.id === clinicId ? updatedClinic : c));
+        } catch (error) {
+            alert('Failed to process subscription.');
+        }
+    };
+
+    const handleCancelSubscription = async (clinicId: number) => {
+        try {
+            const updatedClinic = await firebaseService.cancelSubscription(clinicId);
+            setClinics(prev => prev.map(c => c.id === clinicId ? updatedClinic : c));
+        } catch (error) {
+            alert('Failed to cancel subscription.');
+        }
+    };
+
 
     const renderView = () => {
         if (isLoading) {
@@ -375,17 +414,17 @@ const App: React.FC = () => {
                 case 'admin':
                     if (currentUser?.role !== 'admin') return <Home {...commonProps} clinics={clinics} />; // Security check
                     return <AdminDashboard 
-                        setView={setView} clinics={clinics} blogs={blogPosts} products={productReviews} claims={pendingClaims} pendingReviews={pendingReviews} users={users}
+                        setView={setView} clinics={clinics} blogs={blogPosts} products={productReviews} claims={pendingClaims} pendingReviews={pendingReviews} users={users} subscribers={subscribers} isSaving={isSaving}
                         onSaveClinic={handleSaveClinic} onSaveBlog={handleSaveBlog} onSaveProduct={handleSaveProduct} onDeleteBlog={handleDeleteBlog} onDeleteProduct={handleDeleteProduct}
                         onApproveClaim={handleApproveClaim} onDenyClaim={handleDenyClaim} onApproveReview={handleApproveReview} onDenyReview={handleDenyReview}
                     />;
                 case 'clinicDashboard':
                     if (currentUser?.role !== 'clinic-owner') return <Home {...commonProps} clinics={clinics} />; // Security check
-                    return <ClinicDashboard currentUser={currentUser} clinics={clinics} setView={setView} onSaveClinic={handleSaveClinic} />;
+                    return <ClinicDashboard currentUser={currentUser} clinics={clinics} setView={setView} onSaveClinic={handleSaveClinic} onCancelSubscription={handleCancelSubscription} isSaving={isSaving} />;
                 case 'patientDashboard':
                     if (!currentUser || currentUser.role !== 'patient') return <Home {...commonProps} clinics={clinics} />; // Security check
                     return <PatientDashboard currentUser={currentUser} clinics={clinics} pendingReviews={pendingReviews} {...commonProps} />;
-                case 'pricing': return <PricingPage setView={setView} />;
+                case 'pricing': return <PricingPage setView={setView} currentUser={currentUser} clinics={clinics} onCancelSubscription={handleCancelSubscription} />;
                 case 'blog': return <Blog setView={setView} blogPosts={blogPosts} />;
                 case 'blogDetail':
                     const blogPost = blogPosts.find(p => p.id === view.params?.id);
@@ -407,6 +446,11 @@ const App: React.FC = () => {
                     const clinicForReview = clinics.find(c => c.id === view.params?.clinicId);
                     if (clinicForReview && currentUser) return <WriteReviewPage clinic={clinicForReview} user={currentUser} setView={setView} onSubmitReview={handleSubmitReview} />;
                     return <Directory {...commonProps} clinics={clinics} />;
+                case 'checkout':
+                    const tier = view.params?.tier as Tier;
+                    const clinicToUpgrade = clinics.find(c => c.ownerId === currentUser?.uid);
+                    if (tier && clinicToUpgrade) return <CheckoutPage tier={tier} clinic={clinicToUpgrade} setView={setView} onProcessSubscription={handleProcessSubscription} />;
+                    return <PricingPage setView={setView} currentUser={currentUser} clinics={clinics} onCancelSubscription={handleCancelSubscription} />; // Fallback to pricing
                 default:
                     return <Home {...commonProps} clinics={clinics} />;
             }
@@ -428,7 +472,12 @@ const App: React.FC = () => {
             <main className="flex-grow">
                 {renderView()}
             </main>
-            <Footer />
+            <Footer onOpenNewsletterModal={() => setIsNewsletterModalOpen(true)} />
+            <NewsletterModal 
+                isOpen={isNewsletterModalOpen}
+                onClose={() => setIsNewsletterModalOpen(false)}
+                onSubscribe={handleSubscribe}
+            />
         </div>
     );
 };

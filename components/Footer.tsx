@@ -1,7 +1,11 @@
 
 import React from 'react';
 
-const Footer: React.FC = () => {
+interface FooterProps {
+    onOpenNewsletterModal: () => void;
+}
+
+const Footer: React.FC<FooterProps> = ({ onOpenNewsletterModal }) => {
     return (
         <footer className="bg-gray-800 text-white">
             <div className="container mx-auto px-6 py-12">
@@ -21,7 +25,10 @@ const Footer: React.FC = () => {
                     <div>
                         <h3 className="text-lg font-semibold mb-4">Stay Connected</h3>
                         <p className="text-gray-400 mb-4">Sign up for our newsletter for the latest updates and offers.</p>
-                        <button className="w-full px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors">
+                        <button 
+                            onClick={onOpenNewsletterModal}
+                            className="w-full px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors"
+                        >
                             Subscribe to Newsletter
                         </button>
                     </div>

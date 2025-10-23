@@ -59,6 +59,8 @@ export interface Clinic {
     reviewSource?: string;
     reviewSourceUrl?: string;
     ownerId?: string;
+    subscriptionStatus?: 'active' | 'canceled';
+    stripeCustomerId?: string;
 }
 
 export interface City {
@@ -106,12 +108,18 @@ export interface ClaimRequest {
     status: 'pending';
 }
 
+export interface NewsletterSubscriber {
+    id: number;
+    email: string;
+    subscribedAt: string;
+}
+
 export interface Breadcrumb {
     name: string;
     view: View;
 }
 
 export interface View {
-    page: 'home' | 'directory' | 'clinic' | 'city' | 'admin' | 'pricing' | 'blog' | 'blogDetail' | 'products' | 'productDetail' | 'claimListing' | 'login' | 'writeReview' | 'clinicDashboard' | 'patientDashboard';
+    page: 'home' | 'directory' | 'clinic' | 'city' | 'admin' | 'pricing' | 'blog' | 'blogDetail' | 'products' | 'productDetail' | 'claimListing' | 'login' | 'writeReview' | 'clinicDashboard' | 'patientDashboard' | 'checkout';
     params?: Record<string, any>;
 }
