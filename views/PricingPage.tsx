@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { PRICING_TIERS, CUSTOM_SERVICE } from '../constants';
 import CheckIcon from '../components/icons/CheckIcon';
@@ -114,7 +115,10 @@ const PricingPage: React.FC<PricingPageProps> = ({ setView, currentUser, clinics
                         <p className="mt-4 text-gray-300 max-w-xl">{CUSTOM_SERVICE.description}</p>
                     </div>
                     <div className="mt-8 md:mt-0 md:w-1/3 text-center md:text-right">
-                        <button className="px-8 py-4 bg-white text-teal-800 font-bold rounded-lg hover:bg-gray-200 transition-colors text-lg shadow-md">
+                        <button 
+                            onClick={() => setView({ page: 'aiConcierge' })}
+                            className="px-8 py-4 bg-white text-teal-800 font-bold rounded-lg hover:bg-gray-200 transition-colors text-lg shadow-md"
+                        >
                             {CUSTOM_SERVICE.cta}
                         </button>
                     </div>

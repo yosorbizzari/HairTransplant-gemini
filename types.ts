@@ -131,6 +131,6 @@ export interface Breadcrumb {
 }
 
 export interface View {
-    page: 'home' | 'directory' | 'clinic' | 'city' | 'admin' | 'pricing' | 'blog' | 'blogDetail' | 'products' | 'productDetail' | 'claimListing' | 'login' | 'writeReview' | 'clinicDashboard' | 'patientDashboard' | 'checkout' | 'submitListing' | 'about' | 'contact' | 'privacy' | 'terms';
+    page: 'home' | 'directory' | 'clinic' | 'city' | 'admin' | 'pricing' | 'blog' | 'blogDetail' | 'products' | 'productDetail' | 'claimListing' | 'login' | 'writeReview' | 'clinicDashboard' | 'patientDashboard' | 'checkout' | 'submitListing' | 'about' | 'contact' | 'privacy' | 'terms' | 'aiConcierge' | 'aiConciergeCheckout';
     params?: Record<string, any>;
 }

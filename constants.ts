@@ -839,9 +839,9 @@ export const PRICING_TIERS = [
 ];
 
 export const CUSTOM_SERVICE = {
-    title: 'Enterprise Solution: AI Chatbot Receptionist',
-    description: 'Automate your patient inquiries and booking process with a custom-trained AI receptionist. Our chatbot integrates with your website to answer common questions, qualify leads, and schedule consultations 24/7, freeing up your staff to focus on patient care.',
-    cta: 'Contact Us for a Quote'
+    title: 'Enterprise Solution: AI Patient Concierge',
+    description: 'Automate patient inquiries and booking on your own website. Our custom-trained AI receptionist answers questions, qualifies leads, and schedules consultations 24/7, freeing up your staff to focus on patient care.',
+    cta: 'Learn More'
 };
 
 

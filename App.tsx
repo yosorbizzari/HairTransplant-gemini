@@ -11,6 +11,8 @@ import AdminDashboard from './views/AdminDashboard';
 import ClinicDashboard from './views/ClinicDashboard';
 import PatientDashboard from './views/PatientDashboard';
 import PricingPage from './views/PricingPage';
+import AiConciergePage from './views/AiConciergePage';
+import AiConciergeCheckoutPage from './views/AiConciergeCheckoutPage';
 import Blog from './views/Blog';
 import BlogDetail from './views/BlogDetail';
 import Products from './views/Products';
@@ -173,6 +175,22 @@ const App: React.FC = () => {
                         "aggregateRating": { "@type": "AggregateRating", "ratingValue": product.rating.toFixed(1), "reviewCount": "1" }
                     };
                 }
+                break;
+            case 'aiConcierge':
+                 title = `AI Patient Concierge for Clinics | Transplantify`;
+                 description = `Automate your patient inquiries and booking process with a custom-trained AI receptionist. Capture every lead, 24/7.`;
+                 breadcrumbs.push({ name: 'For Clinics', view: { page: 'pricing' } }, { name: 'AI Concierge', view });
+                 schema = { ...schema, "@type": "WebPage", "name": title, "description": description };
+                 break;
+            case 'aiConciergeCheckout':
+                title = `Checkout: AI Patient Concierge | Transplantify`;
+                description = `Complete your subscription for the 24/7 AI Receptionist and start automating your patient intake process.`;
+                breadcrumbs.push(
+                    { name: 'For Clinics', view: { page: 'pricing' } },
+                    { name: 'AI Concierge', view: { page: 'aiConcierge' } },
+                    { name: 'Checkout', view }
+                );
+                schema = { ...schema, "@type": "WebPage", "name": title, "description": description };
                 break;
             case 'about':
                 title = 'About Transplantify | Our Mission and Story';
@@ -454,7 +472,7 @@ const App: React.FC = () => {
             );
         }
 
-        const showBreadcrumbs = ['clinic', 'city', 'blogDetail', 'productDetail', 'about', 'contact', 'privacy', 'terms'].includes(view.page);
+        const showBreadcrumbs = ['clinic', 'city', 'blogDetail', 'productDetail', 'about', 'contact', 'privacy', 'terms', 'aiConcierge', 'aiConciergeCheckout'].includes(view.page);
         
         const mainContent = () => {
             const commonProps = { setView, currentUser, requestLogin, onToggleFavorite: handleToggleFavorite };
@@ -485,6 +503,8 @@ const App: React.FC = () => {
                     if (!currentUser || currentUser.role !== 'patient') return <Home {...commonProps} clinics={clinics} />; // Security check
                     return <PatientDashboard currentUser={currentUser} clinics={clinics} pendingReviews={pendingReviews} pendingSubmissions={pendingSubmissions} {...commonProps} />;
                 case 'pricing': return <PricingPage setView={setView} currentUser={currentUser} clinics={clinics} onCancelSubscription={handleCancelSubscription} />;
+                case 'aiConcierge': return <AiConciergePage setView={setView} />;
+                case 'aiConciergeCheckout': return <AiConciergeCheckoutPage setView={setView} />;
                 case 'blog': return <Blog setView={setView} blogPosts={blogPosts} />;
                 case 'blogDetail':
                     const blogPost = blogPosts.find(p => p.id === view.params?.id);
