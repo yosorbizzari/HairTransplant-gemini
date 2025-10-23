@@ -5,12 +5,23 @@ export enum Tier {
     GOLD = 'Gold'
 }
 
+export interface JournalEntry {
+    date: string;
+    notes: string;
+    imageUrl: string;
+}
+
+export type PatientJourney = {
+    [milestone: string]: JournalEntry;
+};
+
 export interface User {
     uid: string;
     name: string;
     email: string;
     role: 'admin' | 'clinic-owner' | 'patient';
     favoriteClinics?: number[];
+    journey?: PatientJourney;
 }
 
 export interface Review {

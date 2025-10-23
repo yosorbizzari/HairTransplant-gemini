@@ -30,7 +30,7 @@ import MetaTagManager from './components/MetaTagManager';
 import Schema from './components/Schema';
 import Breadcrumbs from './components/Breadcrumbs';
 import NewsletterModal from './components/NewsletterModal';
-import { View, Clinic, BlogPost, ProductReview, ClaimRequest, User, Review, Breadcrumb, NewsletterSubscriber, Tier, ListingSubmission } from './types';
+import { View, Clinic, BlogPost, ProductReview, ClaimRequest, User, Review, Breadcrumb, NewsletterSubscriber, Tier, ListingSubmission, JournalEntry } from './types';
 import { firebaseService } from './services/firebaseService';
 
 
@@ -462,6 +462,21 @@ const App: React.FC = () => {
         }
     };
 
+    const handleSaveJournalEntry = async (milestone: string, entryData: Omit<JournalEntry, 'date'>) => {
+        if (!currentUser) return;
+        setIsSaving(true);
+        try {
+            const updatedUser = await firebaseService.saveJournalEntry(currentUser.uid, milestone, entryData);
+            setCurrentUser(updatedUser);
+            setUsers(prevUsers => prevUsers.map(u => u.uid === updatedUser.uid ? updatedUser : u));
+        } catch (error) {
+            console.error("Failed to save journal entry:", error);
+            alert("There was an error saving your journal entry. Please try again.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
 
     const renderView = () => {
         if (isLoading) {
@@ -501,7 +516,7 @@ const App: React.FC = () => {
                     return <ClinicDashboard currentUser={currentUser} clinics={clinics} setView={setView} onSaveClinic={handleSaveClinic} onCancelSubscription={handleCancelSubscription} isSaving={isSaving} />;
                 case 'patientDashboard':
                     if (!currentUser || currentUser.role !== 'patient') return <Home {...commonProps} clinics={clinics} />; // Security check
-                    return <PatientDashboard currentUser={currentUser} clinics={clinics} pendingReviews={pendingReviews} pendingSubmissions={pendingSubmissions} {...commonProps} />;
+                    return <PatientDashboard currentUser={currentUser} clinics={clinics} pendingReviews={pendingReviews} pendingSubmissions={pendingSubmissions} onSaveJournalEntry={handleSaveJournalEntry} isSaving={isSaving} {...commonProps} />;
                 case 'pricing': return <PricingPage setView={setView} currentUser={currentUser} clinics={clinics} onCancelSubscription={handleCancelSubscription} />;
                 case 'aiConcierge': return <AiConciergePage setView={setView} />;
                 case 'aiConciergeCheckout': return <AiConciergeCheckoutPage setView={setView} />;

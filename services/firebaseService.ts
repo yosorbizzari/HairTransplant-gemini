@@ -1,5 +1,5 @@
 
-import { Clinic, BlogPost, ProductReview, ClaimRequest, User, Review, Treatment, City, NewsletterSubscriber, Tier, ListingSubmission } from '../types';
+import { Clinic, BlogPost, ProductReview, ClaimRequest, User, Review, Treatment, City, NewsletterSubscriber, Tier, ListingSubmission, JournalEntry } from '../types';
 import { CLINICS, BLOG_POSTS, PRODUCT_REVIEWS, PENDING_CLAIMS, INITIAL_USERS, PENDING_REVIEWS, TREATMENTS, CITIES, INITIAL_SUBSCRIBERS, PENDING_SUBMISSIONS } from '../constants';
 
 // --- DEEP CLONE UTILITY ---
@@ -343,6 +343,43 @@ export const firebaseService = {
         }
 
         console.log("Firebase Service: Toggled favorite for user.", updatedUser);
+        return deepClone(updatedUser);
+    },
+
+    saveJournalEntry: async (userId: string, milestone: string, entryData: Omit<JournalEntry, 'date'>): Promise<User> => {
+        await networkDelay(600);
+        const userIndex = db.users.findIndex(u => u.uid === userId);
+        if (userIndex === -1) throw new Error("User not found.");
+
+        const user = db.users[userIndex];
+        const newEntryData = deepClone(entryData);
+
+        // Simulate file upload if needed
+        if (newEntryData.imageUrl && newEntryData.imageUrl.startsWith('data:image')) {
+            console.log("Firebase Service: Detected Base64 journal image. Uploading...");
+            newEntryData.imageUrl = await firebaseService.uploadFile(newEntryData.imageUrl);
+        }
+
+        const newEntry: JournalEntry = {
+            ...newEntryData,
+            date: new Date().toISOString().split('T')[0],
+        };
+
+        const updatedUser = {
+            ...deepClone(user),
+            journey: {
+                ...user.journey,
+                [milestone]: newEntry,
+            },
+        };
+        
+        db.users = db.users.map(u => u.uid === userId ? updatedUser : u);
+
+        if (currentAuthUser?.uid === userId) {
+            currentAuthUser = deepClone(updatedUser);
+        }
+
+        console.log(`Firebase Service: Saved journal entry for user ${userId} at milestone ${milestone}.`, newEntry);
         return deepClone(updatedUser);
     },
 

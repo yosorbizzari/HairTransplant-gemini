@@ -1,8 +1,9 @@
 
 import React, { useState, useMemo } from 'react';
-import { Clinic, User, View, Review, ListingSubmission } from '../types';
+import { Clinic, User, View, Review, ListingSubmission, JournalEntry } from '../types';
 import ClinicCard from '../components/ClinicCard';
 import StarIcon from '../components/icons/StarIcon';
+import PatientJourney from '../components/PatientJourney';
 
 interface PatientDashboardProps {
     currentUser: User;
@@ -12,10 +13,12 @@ interface PatientDashboardProps {
     setView: (view: View) => void;
     onToggleFavorite: (clinicId: number) => void;
     requestLogin: (redirectView: View) => void;
+    onSaveJournalEntry: (milestone: string, entryData: Omit<JournalEntry, 'date'>) => void;
+    isSaving: boolean;
 }
 
-const PatientDashboard: React.FC<PatientDashboardProps> = ({ currentUser, clinics, pendingReviews, pendingSubmissions, setView, onToggleFavorite, requestLogin }) => {
-    const [activeTab, setActiveTab] = useState('saved');
+const PatientDashboard: React.FC<PatientDashboardProps> = ({ currentUser, clinics, pendingReviews, pendingSubmissions, setView, onToggleFavorite, requestLogin, onSaveJournalEntry, isSaving }) => {
+    const [activeTab, setActiveTab] = useState('journey');
 
     const savedClinics = useMemo(() => {
         return clinics.filter(clinic => currentUser.favoriteClinics?.includes(clinic.id));
@@ -34,6 +37,14 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ currentUser, clinic
 
     const renderContent = () => {
         switch (activeTab) {
+            case 'journey':
+                return (
+                    <PatientJourney 
+                        currentUser={currentUser}
+                        onSaveJournalEntry={onSaveJournalEntry}
+                        isSaving={isSaving}
+                    />
+                );
             case 'saved':
                 return (
                     <div>
@@ -162,7 +173,15 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ currentUser, clinic
             <div className="container mx-auto px-6 py-12">
                 <h1 className="text-4xl font-extrabold mb-2">My Dashboard</h1>
                 <p className="text-lg text-gray-600 mb-8">Welcome back, {currentUser.name.split(' ')[0]}!</p>
-                <div className="flex gap-2 border-b mb-8 pb-2">
+                <div className="flex flex-wrap gap-2 border-b mb-8 pb-2">
+                    <button
+                        onClick={() => setActiveTab('journey')}
+                        className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                            activeTab === 'journey' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-200'
+                        }`}
+                    >
+                        My Journey
+                    </button>
                     <button
                         onClick={() => setActiveTab('saved')}
                         className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
