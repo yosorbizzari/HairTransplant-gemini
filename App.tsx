@@ -489,98 +489,177 @@ const App: React.FC = () => {
 
         const showBreadcrumbs = ['clinic', 'city', 'blogDetail', 'productDetail', 'about', 'contact', 'privacy', 'terms', 'aiConcierge', 'aiConciergeCheckout'].includes(view.page);
         
-        const mainContent = () => {
-            const commonProps = { setView, currentUser, requestLogin, onToggleFavorite: handleToggleFavorite };
-            
-            switch (view.page) {
-                case 'home': return <Home {...commonProps} clinics={clinics} />;
-                case 'directory': return <Directory {...commonProps} clinics={clinics} />;
-                case 'clinic':
-                    const clinic = clinics.find(c => c.id === view.params?.id);
-                    if (clinic) return <ClinicDetail clinic={clinic} setView={setView} currentUser={currentUser} requestLogin={requestLogin} users={users} />;
-                    return <Directory {...commonProps} clinics={clinics} />;
-                case 'city':
-                    if (view.params?.cityName) return <CityPage cityName={view.params.cityName} {...commonProps} clinics={clinics} />;
-                    return <Home {...commonProps} clinics={clinics} />;
-                case 'admin':
-                    if (currentUser?.role !== 'admin') return <Home {...commonProps} clinics={clinics} />; // Security check
-                    return <AdminDashboard 
-                        setView={setView} clinics={clinics} blogs={blogPosts} products={productReviews} claims={pendingClaims} pendingReviews={pendingReviews} users={users} subscribers={subscribers} isSaving={isSaving}
+        let mainContent;
+        switch (view.page) {
+            case 'home':
+                mainContent = <Home setView={setView} clinics={clinics} currentUser={currentUser} onToggleFavorite={handleToggleFavorite} requestLogin={requestLogin} />;
+                break;
+            case 'directory':
+                mainContent = <Directory setView={setView} clinics={clinics} currentUser={currentUser} onToggleFavorite={handleToggleFavorite} requestLogin={requestLogin} initialFilters={view.params} />;
+                break;
+            case 'clinic':
+                const clinic = clinics.find(c => c.id === view.params?.id);
+                if (clinic) {
+                    mainContent = <ClinicDetail clinic={clinic} setView={setView} currentUser={currentUser} requestLogin={requestLogin} users={users} />;
+                } else {
+                    mainContent = <div className="text-center py-20">Clinic not found.</div>;
+                }
+                break;
+            case 'city':
+                const cityName = view.params?.cityName;
+                if (cityName) {
+                    mainContent = <CityPage cityName={cityName} setView={setView} clinics={clinics} currentUser={currentUser} onToggleFavorite={handleToggleFavorite} requestLogin={requestLogin} />;
+                } else {
+                    mainContent = <div className="text-center py-20">City not specified.</div>;
+                }
+                break;
+             case 'admin':
+                if (currentUser?.role === 'admin') {
+                    mainContent = <AdminDashboard 
+                        setView={setView}
+                        clinics={clinics}
+                        blogs={blogPosts}
+                        products={productReviews}
+                        claims={pendingClaims}
+                        pendingReviews={pendingReviews}
                         pendingSubmissions={pendingSubmissions}
-                        onSaveClinic={handleSaveClinic} onSaveBlog={handleSaveBlog} onSaveProduct={handleSaveProduct} onDeleteBlog={handleDeleteBlog} onDeleteProduct={handleDeleteProduct}
-                        onApproveClaim={handleApproveClaim} onDenyClaim={handleDenyClaim} onApproveReview={handleApproveReview} onDenyReview={handleDenyReview}
-                        onApproveSubmission={handleApproveSubmission} onDenySubmission={handleDenySubmission}
+                        users={users}
+                        subscribers={subscribers}
+                        onSaveClinic={handleSaveClinic}
+                        onSaveBlog={handleSaveBlog}
+                        onSaveProduct={handleSaveProduct}
+                        onDeleteBlog={handleDeleteBlog}
+                        onDeleteProduct={handleDeleteProduct}
+                        onApproveClaim={handleApproveClaim}
+                        onDenyClaim={handleDenyClaim}
+                        onApproveReview={handleApproveReview}
+                        onDenyReview={handleDenyReview}
+                        onApproveSubmission={handleApproveSubmission}
+                        onDenySubmission={handleDenySubmission}
+                        isSaving={isSaving}
                     />;
-                case 'clinicDashboard':
-                    if (currentUser?.role !== 'clinic-owner') return <Home {...commonProps} clinics={clinics} />; // Security check
-                    return <ClinicDashboard currentUser={currentUser} clinics={clinics} setView={setView} onSaveClinic={handleSaveClinic} onCancelSubscription={handleCancelSubscription} isSaving={isSaving} />;
-                case 'patientDashboard':
-                    if (!currentUser || currentUser.role !== 'patient') return <Home {...commonProps} clinics={clinics} />; // Security check
-                    return <PatientDashboard currentUser={currentUser} clinics={clinics} pendingReviews={pendingReviews} pendingSubmissions={pendingSubmissions} onSaveJournalEntry={handleSaveJournalEntry} isSaving={isSaving} {...commonProps} />;
-                case 'pricing': return <PricingPage setView={setView} currentUser={currentUser} clinics={clinics} onCancelSubscription={handleCancelSubscription} />;
-                case 'aiConcierge': return <AiConciergePage setView={setView} />;
-                case 'aiConciergeCheckout': return <AiConciergeCheckoutPage setView={setView} />;
-                case 'blog': return <Blog setView={setView} blogPosts={blogPosts} />;
-                case 'blogDetail':
-                    const blogPost = blogPosts.find(p => p.id === view.params?.id);
-                    if (blogPost) return <BlogDetail blogPost={blogPost} setView={setView} />;
-                    return <Blog setView={setView} blogPosts={blogPosts} />;
-                case 'products': return <Products setView={setView} products={productReviews} />;
-                case 'productDetail':
-                    const product = productReviews.find(p => p.id === view.params?.id);
-                    if (product) return <ProductDetail product={product} setView={setView} />;
-                    return <Products setView={setView} products={productReviews} />;
-                case 'claimListing':
-                     const clinicToClaim = clinics.find(c => c.id === view.params?.id);
-                     if (clinicToClaim) return <ClaimListingPage clinic={clinicToClaim} setView={setView} onClaimSubmit={handleClaimSubmit} />;
-                     return <Directory {...commonProps} clinics={clinics} />;
-                case 'submitListing':
-                    return <SubmitListingPage setView={setView} onSubmit={handleSubmitListing} currentUser={currentUser} requestLogin={requestLogin} />;
-                case 'login':
-                    const reason = loginRedirectView ? 'You need to be logged in to perform this action.' : 'Log in to your account to continue.';
-                    return <LoginPage setView={setView} onLogin={handleLogin} onSignUp={handleSignUp} reason={reason} />;
-                case 'writeReview':
-                    const clinicForReview = clinics.find(c => c.id === view.params?.clinicId);
-                    if (clinicForReview && currentUser) return <WriteReviewPage clinic={clinicForReview} user={currentUser} setView={setView} onSubmitReview={handleSubmitReview} />;
-                    return <Directory {...commonProps} clinics={clinics} />;
-                case 'checkout':
-                    const tier = view.params?.tier as Tier;
-                    const clinicToUpgrade = clinics.find(c => c.ownerId === currentUser?.uid);
-                    if (tier && clinicToUpgrade) return <CheckoutPage tier={tier} clinic={clinicToUpgrade} setView={setView} onProcessSubscription={handleProcessSubscription} />;
-                    return <PricingPage setView={setView} currentUser={currentUser} clinics={clinics} onCancelSubscription={handleCancelSubscription} />; // Fallback to pricing
-                case 'about': return <AboutUsPage setView={setView} />;
-                case 'contact': return <ContactPage setView={setView} onContactSubmit={handleContactSubmit} />;
-                case 'privacy': return <PrivacyPolicyPage />;
-                case 'terms': return <TermsOfServicePage />;
-                default:
-                    return <Home {...commonProps} clinics={clinics} />;
-            }
-        };
-
+                } else {
+                    mainContent = <div className="text-center py-20">Access Denied.</div>;
+                }
+                break;
+             case 'clinicDashboard':
+                if (currentUser?.role === 'clinic-owner') {
+                    mainContent = <ClinicDashboard currentUser={currentUser} clinics={clinics} setView={setView} onSaveClinic={handleSaveClinic} onCancelSubscription={handleCancelSubscription} isSaving={isSaving} />;
+                } else {
+                    mainContent = <div className="text-center py-20">Access Denied.</div>;
+                }
+                break;
+            case 'patientDashboard':
+                if (currentUser?.role === 'patient') {
+                    mainContent = <PatientDashboard 
+                        currentUser={currentUser} 
+                        clinics={clinics} 
+                        pendingReviews={pendingReviews}
+                        pendingSubmissions={pendingSubmissions}
+                        setView={setView} 
+                        onToggleFavorite={handleToggleFavorite}
+                        requestLogin={requestLogin}
+                        onSaveJournalEntry={handleSaveJournalEntry}
+                        isSaving={isSaving}
+                    />;
+                } else {
+                    mainContent = <div className="text-center py-20">Access Denied.</div>;
+                }
+                break;
+            case 'pricing':
+                mainContent = <PricingPage setView={setView} currentUser={currentUser} clinics={clinics} onCancelSubscription={handleCancelSubscription} />;
+                break;
+            case 'aiConcierge':
+                mainContent = <AiConciergePage setView={setView} />;
+                break;
+            case 'aiConciergeCheckout':
+                mainContent = <AiConciergeCheckoutPage setView={setView} />;
+                break;
+            case 'blog':
+                mainContent = <Blog setView={setView} blogPosts={blogPosts} />;
+                break;
+            case 'blogDetail':
+                const blogPost = blogPosts.find(p => p.id === view.params?.id);
+                 if (blogPost) {
+                    mainContent = <BlogDetail blogPost={blogPost} setView={setView} />;
+                } else {
+                    mainContent = <div className="text-center py-20">Blog post not found.</div>;
+                }
+                break;
+            case 'products':
+                mainContent = <Products setView={setView} products={productReviews} />;
+                break;
+            case 'productDetail':
+                const product = productReviews.find(p => p.id === view.params?.id);
+                if (product) {
+                    mainContent = <ProductDetail product={product} setView={setView} />;
+                } else {
+                    mainContent = <div className="text-center py-20">Product not found.</div>;
+                }
+                break;
+            case 'claimListing':
+                const clinicToClaim = clinics.find(c => c.id === view.params?.id);
+                if (clinicToClaim) {
+                    mainContent = <ClaimListingPage clinic={clinicToClaim} setView={setView} onClaimSubmit={handleClaimSubmit} />;
+                } else {
+                    mainContent = <div className="text-center py-20">Clinic not found.</div>;
+                }
+                break;
+            case 'submitListing':
+                mainContent = <SubmitListingPage setView={setView} onSubmit={handleSubmitListing} currentUser={currentUser} requestLogin={requestLogin} />;
+                break;
+            case 'login':
+                mainContent = <LoginPage onLogin={handleLogin} onSignUp={handleSignUp} setView={setView} reason={loginRedirectView ? "Please log in or sign up to continue." : ""} />;
+                break;
+            case 'writeReview':
+                const clinicToReview = clinics.find(c => c.id === view.params?.clinicId);
+                if (clinicToReview && currentUser) {
+                    mainContent = <WriteReviewPage clinic={clinicToReview} user={currentUser} setView={setView} onSubmitReview={handleSubmitReview} />;
+                } else {
+                     mainContent = <div className="text-center py-20">Error: Clinic not found or user not logged in.</div>;
+                }
+                break;
+            case 'checkout':
+                const tier = view.params?.tier as Tier;
+                const ownedClinic = clinics.find(c => c.ownerId === currentUser?.uid);
+                if (tier && ownedClinic) {
+                    mainContent = <CheckoutPage tier={tier} clinic={ownedClinic} setView={setView} onProcessSubscription={handleProcessSubscription} />;
+                } else {
+                    mainContent = <div className="text-center py-20">Error: Plan or clinic information is missing.</div>;
+                }
+                break;
+            case 'about':
+                mainContent = <AboutUsPage setView={setView} />;
+                break;
+            case 'contact':
+                mainContent = <ContactPage setView={setView} onContactSubmit={handleContactSubmit} />;
+                break;
+            case 'privacy':
+                mainContent = <PrivacyPolicyPage />;
+                break;
+            case 'terms':
+                mainContent = <TermsOfServicePage />;
+                break;
+            default:
+                mainContent = <Home setView={setView} clinics={clinics} currentUser={currentUser} onToggleFavorite={handleToggleFavorite} requestLogin={requestLogin} />;
+        }
+        
         return (
-            <div className="flex flex-col">
+             <div className="flex flex-col min-h-screen">
+                <MetaTagManager title={pageData.title} description={pageData.description} />
+                <Schema data={pageData.schema} />
+                <Header setView={setView} currentUser={currentUser} onLogout={handleLogout} />
                 {showBreadcrumbs && <Breadcrumbs crumbs={pageData.breadcrumbs} setView={setView} />}
-                {mainContent()}
+                <main className="flex-grow">
+                    {mainContent}
+                </main>
+                <Footer onOpenNewsletterModal={() => setIsNewsletterModalOpen(true)} setView={setView} />
+                <NewsletterModal isOpen={isNewsletterModalOpen} onClose={() => setIsNewsletterModalOpen(false)} onSubscribe={handleSubscribe} />
             </div>
         );
     };
 
-    return (
-        <div className="flex flex-col min-h-screen">
-            <MetaTagManager title={pageData.title} description={pageData.description} />
-            <Schema data={pageData.schema} />
-            <Header setView={setView} currentUser={currentUser} onLogout={handleLogout} />
-            <main className="flex-grow">
-                {renderView()}
-            </main>
-            <Footer setView={setView} onOpenNewsletterModal={() => setIsNewsletterModalOpen(true)} />
-            <NewsletterModal 
-                isOpen={isNewsletterModalOpen}
-                onClose={() => setIsNewsletterModalOpen(false)}
-                onSubscribe={handleSubscribe}
-            />
-        </div>
-    );
+    return renderView();
 };
 
 export default App;

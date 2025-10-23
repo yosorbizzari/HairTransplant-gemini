@@ -28,6 +28,14 @@ const PricingPage: React.FC<PricingPageProps> = ({ setView, currentUser, clinics
             setIsDowngrading(false);
         }
     };
+    
+    const handlePatientCtaClick = () => {
+        if (currentUser) {
+            setView({ page: 'patientDashboard' });
+        } else {
+            setView({ page: 'login' });
+        }
+    };
 
     const getButtonState = (tierName: string) => {
         const targetTier = tierName.startsWith('Gold') ? Tier.GOLD : tierName.startsWith('Premium') ? Tier.PREMIUM : Tier.BASIC;
@@ -107,28 +115,6 @@ const PricingPage: React.FC<PricingPageProps> = ({ setView, currentUser, clinics
                 })}
             </div>
 
-            {/* For Patients Section */}
-            <div className="container mx-auto px-6 mt-20">
-                 <div className="bg-white rounded-xl shadow-lg p-8 border max-w-4xl mx-auto text-center">
-                    <h2 className="text-3xl font-bold text-gray-900">For Patients</h2>
-                    <p className="mt-4 text-5xl font-extrabold text-teal-600">100% Free</p>
-                    <p className="mt-4 text-gray-600">Create a free patient account to access essential tools for your hair restoration journey.</p>
-                    <ul className="mt-6 space-y-3 inline-block text-left">
-                        <li className="flex items-center text-lg"><CheckIcon className="w-6 h-6 text-green-500 mr-3"/>Private Progress Journal</li>
-                        <li className="flex items-center text-lg"><CheckIcon className="w-6 h-6 text-green-500 mr-3"/>Save & Compare Favorite Clinics</li>
-                        <li className="flex items-center text-lg"><CheckIcon className="w-6 h-6 text-green-500 mr-3"/>Write Reviews & Share Your Experience</li>
-                    </ul>
-                    <div className="mt-8">
-                        <button 
-                            onClick={() => setView({ page: 'login' })}
-                            className="px-8 py-3 bg-teal-600 text-white font-bold rounded-lg hover:bg-teal-700 transition-colors text-lg"
-                        >
-                            Create Your Free Patient Account
-                        </button>
-                    </div>
-                </div>
-            </div>
-
             {/* Custom Service Section */}
             <div className="container mx-auto px-6 mt-20">
                 <div className="bg-gradient-to-r from-gray-800 to-teal-900 text-white rounded-xl shadow-2xl p-8 md:p-12 flex flex-col md:flex-row md:items-center justify-between">
@@ -142,6 +128,28 @@ const PricingPage: React.FC<PricingPageProps> = ({ setView, currentUser, clinics
                             className="px-8 py-4 bg-white text-teal-800 font-bold rounded-lg hover:bg-gray-200 transition-colors text-lg shadow-md"
                         >
                             {CUSTOM_SERVICE.cta}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* For Patients Section */}
+            <div className="container mx-auto px-6 mt-20">
+                 <div className="bg-white rounded-xl shadow-lg p-8 border max-w-4xl mx-auto text-center">
+                    <h2 className="text-3xl font-bold text-gray-900">For Patients</h2>
+                    <p className="mt-4 text-5xl font-extrabold text-teal-600">100% Free</p>
+                    <p className="mt-4 text-gray-600">Create a free patient account to access essential tools for your hair restoration journey.</p>
+                    <ul className="mt-6 space-y-3 inline-block text-left">
+                        <li className="flex items-center text-lg"><CheckIcon className="w-6 h-6 text-green-500 mr-3"/>Private Progress Journal</li>
+                        <li className="flex items-center text-lg"><CheckIcon className="w-6 h-6 text-green-500 mr-3"/>Save & Compare Favorite Clinics</li>
+                        <li className="flex items-center text-lg"><CheckIcon className="w-6 h-6 text-green-500 mr-3"/>Write Reviews & Share Your Experience</li>
+                    </ul>
+                    <div className="mt-8">
+                        <button 
+                            onClick={handlePatientCtaClick}
+                            className="px-8 py-3 bg-teal-600 text-white font-bold rounded-lg hover:bg-teal-700 transition-colors text-lg"
+                        >
+                            Create Your Free Patient Account
                         </button>
                     </div>
                 </div>

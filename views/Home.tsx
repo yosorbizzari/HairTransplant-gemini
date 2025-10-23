@@ -23,6 +23,13 @@ const Home: React.FC<HomeProps> = ({ setView, clinics, currentUser, onToggleFavo
         [clinics]
     );
 
+    const handleStartJourneyClick = () => {
+        if (currentUser) {
+            setView({ page: 'patientDashboard' });
+        } else {
+            setView({ page: 'login' });
+        }
+    };
 
     return (
         <div>
@@ -111,7 +118,7 @@ const Home: React.FC<HomeProps> = ({ setView, clinics, currentUser, onToggleFavo
                                 </li>
                             </ul>
                              <button
-                                onClick={() => setView({ page: 'login' })}
+                                onClick={handleStartJourneyClick}
                                 className="mt-8 px-8 py-3 bg-teal-600 text-white font-bold rounded-lg hover:bg-teal-700 transition-colors text-lg shadow-md"
                             >
                                 Start Your Journey for Free

@@ -60,14 +60,13 @@ const Header: React.FC<HeaderProps> = ({ setView, currentUser, onLogout }) => {
                     </div>
 
                     {/* Desktop Auth */}
-                    <div className="hidden md:flex items-center gap-4">
+                    <div className="hidden md:flex items-center">
                         {currentUser ? (
-                            <div className="flex items-center gap-4">
-                                <span className="text-gray-700 font-medium hidden lg:block">Welcome, {currentUser.name}</span>
-                                <span className="text-gray-700 font-medium md:block lg:hidden">Hi, {currentUser.name.split(' ')[0]}</span>
+                            <div className="text-right">
+                                <span className="text-gray-700 font-medium text-sm block">Welcome, {currentUser.name}</span>
                                 <button 
                                     onClick={onLogout}
-                                    className="text-sm bg-gray-200 px-3 py-1.5 rounded-md hover:bg-gray-300 transition-colors font-semibold"
+                                    className="text-sm text-teal-600 hover:underline font-semibold"
                                 >
                                     Logout
                                 </button>
