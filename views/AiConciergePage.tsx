@@ -2,10 +2,13 @@
 import React, { useState } from 'react';
 import { View } from '../types';
 import CheckIcon from '../components/icons/CheckIcon';
+import BookDemoModal from '../components/BookDemoModal';
 
 const AiConciergePage: React.FC<{ setView: (view: View) => void }> = ({ setView }) => {
     
     const [demoStep, setDemoStep] = useState(0);
+    const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
+
     const demoConversation = [
         { type: 'patient', text: 'Hi, how much does an FUE procedure cost?' },
         { type: 'ai', text: 'Hello! The cost of an FUE procedure can vary based on the number of grafts needed. Generally, it ranges from $4,000 to $15,000. Would you like me to help you get a more precise quote?' },
@@ -29,7 +32,10 @@ const AiConciergePage: React.FC<{ setView: (view: View) => void }> = ({ setView 
                 <div className="relative container mx-auto px-6 text-center">
                     <h1 className="text-4xl md:text-6xl font-extrabold mb-4 leading-tight tracking-tight">Never Miss a Patient Inquiry Again</h1>
                     <p className="text-lg md:text-xl text-teal-100 mb-8 max-w-3xl mx-auto">Introducing the Transplantify AI Concierge: Your 24/7 Automated Clinic Receptionist.</p>
-                    <button className="px-8 py-4 bg-white text-teal-800 font-bold rounded-lg hover:bg-gray-200 transition-colors text-lg shadow-xl">
+                    <button 
+                        onClick={() => setIsDemoModalOpen(true)}
+                        className="px-8 py-4 bg-white text-teal-800 font-bold rounded-lg hover:bg-gray-200 transition-colors text-lg shadow-xl"
+                    >
                         Book a Live Demo
                     </button>
                 </div>
@@ -117,7 +123,7 @@ const AiConciergePage: React.FC<{ setView: (view: View) => void }> = ({ setView 
                                 <li className="flex"><CheckIcon className="w-6 h-6 text-green-500 mr-2 flex-shrink-0" /> CRM integration</li>
                                 <li className="flex"><CheckIcon className="w-6 h-6 text-green-500 mr-2 flex-shrink-0" /> Dedicated support</li>
                             </ul>
-                            <button className="w-full py-3 bg-gray-800 text-white font-bold rounded-lg hover:bg-gray-900">Contact Sales</button>
+                            <button onClick={() => setIsDemoModalOpen(true)} className="w-full py-3 bg-gray-800 text-white font-bold rounded-lg hover:bg-gray-900">Contact Sales</button>
                         </div>
                     </div>
                 </div>
@@ -128,11 +134,16 @@ const AiConciergePage: React.FC<{ setView: (view: View) => void }> = ({ setView 
                 <div className="container mx-auto px-6 py-20 text-center">
                     <h2 className="text-4xl font-extrabold">Ready to automate your patient intake?</h2>
                     <p className="mt-4 text-lg text-teal-100 max-w-2xl mx-auto">Book your free, no-obligation demo today and see how the AI Concierge can transform your clinic's efficiency.</p>
-                    <button className="mt-8 px-8 py-4 bg-white text-teal-800 font-bold rounded-lg hover:bg-gray-200 transition-colors text-lg shadow-xl">
+                    <button onClick={() => setIsDemoModalOpen(true)} className="mt-8 px-8 py-4 bg-white text-teal-800 font-bold rounded-lg hover:bg-gray-200 transition-colors text-lg shadow-xl">
                         Book Your Free Demo
                     </button>
                 </div>
             </div>
+            
+            <BookDemoModal 
+                isOpen={isDemoModalOpen}
+                onClose={() => setIsDemoModalOpen(false)}
+            />
         </div>
     );
 };
