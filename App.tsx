@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useState, useEffect } from 'react';
 import Header from './components/Header';
@@ -15,14 +16,19 @@ import BlogDetail from './views/BlogDetail';
 import Products from './views/Products';
 import ProductDetail from './views/ProductDetail';
 import ClaimListingPage from './views/ClaimListingPage';
+import SubmitListingPage from './views/SubmitListingPage';
 import LoginPage from './views/LoginPage';
 import WriteReviewPage from './views/WriteReviewPage';
 import CheckoutPage from './views/CheckoutPage';
+import AboutUsPage from './views/AboutUsPage';
+import ContactPage from './views/ContactPage';
+import PrivacyPolicyPage from './views/PrivacyPolicyPage';
+import TermsOfServicePage from './views/TermsOfServicePage';
 import MetaTagManager from './components/MetaTagManager';
 import Schema from './components/Schema';
 import Breadcrumbs from './components/Breadcrumbs';
 import NewsletterModal from './components/NewsletterModal';
-import { View, Clinic, BlogPost, ProductReview, ClaimRequest, User, Review, Breadcrumb, NewsletterSubscriber, Tier } from './types';
+import { View, Clinic, BlogPost, ProductReview, ClaimRequest, User, Review, Breadcrumb, NewsletterSubscriber, Tier, ListingSubmission } from './types';
 import { firebaseService } from './services/firebaseService';
 
 
@@ -36,6 +42,7 @@ const App: React.FC = () => {
     const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
     const [productReviews, setProductReviews] = useState<ProductReview[]>([]);
     const [pendingClaims, setPendingClaims] = useState<ClaimRequest[]>([]);
+    const [pendingSubmissions, setPendingSubmissions] = useState<ListingSubmission[]>([]);
     const [users, setUsers] = useState<User[]>([]);
     const [pendingReviews, setPendingReviews] = useState<Review[]>([]);
     const [subscribers, setSubscribers] = useState<NewsletterSubscriber[]>([]);
@@ -57,6 +64,7 @@ const App: React.FC = () => {
                 setBlogPosts(data.blogPosts);
                 setProductReviews(data.productReviews);
                 setPendingClaims(data.pendingClaims);
+                setPendingSubmissions(data.pendingSubmissions);
                 setUsers(data.users);
                 setPendingReviews(data.pendingReviews);
                 setCurrentUser(data.currentUser);
@@ -165,6 +173,30 @@ const App: React.FC = () => {
                         "aggregateRating": { "@type": "AggregateRating", "ratingValue": product.rating.toFixed(1), "reviewCount": "1" }
                     };
                 }
+                break;
+            case 'about':
+                title = 'About Transplantify | Our Mission and Story';
+                description = 'Learn about Transplantify\'s mission to bring transparency and trust to the hair transplant industry. Discover our story and our commitment to patients.';
+                breadcrumbs.push({ name: 'About Us', view });
+                schema = { ...schema, "@type": "AboutPage", "name": title, "description": description };
+                break;
+            case 'contact':
+                title = 'Contact Us | Transplantify';
+                description = 'Get in touch with the Transplantify team. We are here to help with any questions or feedback you may have.';
+                breadcrumbs.push({ name: 'Contact Us', view });
+                schema = { ...schema, "@type": "ContactPage", "name": title, "description": description };
+                break;
+            case 'privacy':
+                title = 'Privacy Policy | Transplantify';
+                description = 'Read the Transplantify Privacy Policy to understand how we collect, use, and protect your personal data.';
+                breadcrumbs.push({ name: 'Privacy Policy', view });
+                schema = { ...schema, "@type": "WebPage", "name": title, "description": description };
+                break;
+            case 'terms':
+                title = 'Terms of Service | Transplantify';
+                description = 'Review the Terms of Service for using the Transplantify website and its related services.';
+                breadcrumbs.push({ name: 'Terms of Service', view });
+                schema = { ...schema, "@type": "WebPage", "name": title, "description": description };
                 break;
         }
 
@@ -344,6 +376,24 @@ const App: React.FC = () => {
         setPendingClaims(prevClaims => prevClaims.filter(c => c.id !== claimId));
     };
 
+    const handleSubmitListing = async (submissionData: Omit<ListingSubmission, 'id' | 'status'>) => {
+        const newSubmission = await firebaseService.submitListing(submissionData);
+        setPendingSubmissions(prev => [newSubmission, ...prev]);
+        alert('Thank you! Your submission has been sent for review.');
+        setView({ page: 'patientDashboard' });
+    };
+
+    const handleApproveSubmission = async (submissionId: number) => {
+        const newClinic = await firebaseService.approveSubmission(submissionId);
+        setClinics(prev => [newClinic, ...prev]);
+        setPendingSubmissions(prev => prev.filter(s => s.id !== submissionId));
+    };
+    
+    const handleDenySubmission = async (submissionId: number) => {
+        await firebaseService.denySubmission(submissionId);
+        setPendingSubmissions(prev => prev.filter(s => s.id !== submissionId));
+    };
+
     const handleToggleFavorite = async (clinicId: number) => {
         if (!currentUser) {
             requestLogin({ page: 'directory' }); // Redirect to directory after login
@@ -366,6 +416,14 @@ const App: React.FC = () => {
         } catch (error: any) {
              return { success: false, message: error.message };
         }
+    };
+
+    const handleContactSubmit = async (formData: { name: string; email: string; subject: string; message: string; }) => {
+        // In a real app, this would send an email or save to a database.
+        // For this simulation, we'll just show an alert.
+        console.log("Contact form submitted:", formData);
+        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network request
+        return { success: true, message: "Your message has been sent successfully!" };
     };
 
     const handleProcessSubscription = async (clinicId: number, tier: Tier) => {
@@ -396,14 +454,14 @@ const App: React.FC = () => {
             );
         }
 
-        const showBreadcrumbs = ['clinic', 'city', 'blogDetail', 'productDetail'].includes(view.page);
+        const showBreadcrumbs = ['clinic', 'city', 'blogDetail', 'productDetail', 'about', 'contact', 'privacy', 'terms'].includes(view.page);
         
         const mainContent = () => {
             const commonProps = { setView, currentUser, requestLogin, onToggleFavorite: handleToggleFavorite };
             
             switch (view.page) {
                 case 'home': return <Home {...commonProps} clinics={clinics} />;
-                case 'directory': return <Directory {...commonProps} initialFilters={view.params} clinics={clinics} />;
+                case 'directory': return <Directory {...commonProps} clinics={clinics} />;
                 case 'clinic':
                     const clinic = clinics.find(c => c.id === view.params?.id);
                     if (clinic) return <ClinicDetail clinic={clinic} setView={setView} currentUser={currentUser} requestLogin={requestLogin} users={users} />;
@@ -415,15 +473,17 @@ const App: React.FC = () => {
                     if (currentUser?.role !== 'admin') return <Home {...commonProps} clinics={clinics} />; // Security check
                     return <AdminDashboard 
                         setView={setView} clinics={clinics} blogs={blogPosts} products={productReviews} claims={pendingClaims} pendingReviews={pendingReviews} users={users} subscribers={subscribers} isSaving={isSaving}
+                        pendingSubmissions={pendingSubmissions}
                         onSaveClinic={handleSaveClinic} onSaveBlog={handleSaveBlog} onSaveProduct={handleSaveProduct} onDeleteBlog={handleDeleteBlog} onDeleteProduct={handleDeleteProduct}
                         onApproveClaim={handleApproveClaim} onDenyClaim={handleDenyClaim} onApproveReview={handleApproveReview} onDenyReview={handleDenyReview}
+                        onApproveSubmission={handleApproveSubmission} onDenySubmission={handleDenySubmission}
                     />;
                 case 'clinicDashboard':
                     if (currentUser?.role !== 'clinic-owner') return <Home {...commonProps} clinics={clinics} />; // Security check
                     return <ClinicDashboard currentUser={currentUser} clinics={clinics} setView={setView} onSaveClinic={handleSaveClinic} onCancelSubscription={handleCancelSubscription} isSaving={isSaving} />;
                 case 'patientDashboard':
                     if (!currentUser || currentUser.role !== 'patient') return <Home {...commonProps} clinics={clinics} />; // Security check
-                    return <PatientDashboard currentUser={currentUser} clinics={clinics} pendingReviews={pendingReviews} {...commonProps} />;
+                    return <PatientDashboard currentUser={currentUser} clinics={clinics} pendingReviews={pendingReviews} pendingSubmissions={pendingSubmissions} {...commonProps} />;
                 case 'pricing': return <PricingPage setView={setView} currentUser={currentUser} clinics={clinics} onCancelSubscription={handleCancelSubscription} />;
                 case 'blog': return <Blog setView={setView} blogPosts={blogPosts} />;
                 case 'blogDetail':
@@ -439,6 +499,8 @@ const App: React.FC = () => {
                      const clinicToClaim = clinics.find(c => c.id === view.params?.id);
                      if (clinicToClaim) return <ClaimListingPage clinic={clinicToClaim} setView={setView} onClaimSubmit={handleClaimSubmit} />;
                      return <Directory {...commonProps} clinics={clinics} />;
+                case 'submitListing':
+                    return <SubmitListingPage setView={setView} onSubmit={handleSubmitListing} currentUser={currentUser} requestLogin={requestLogin} />;
                 case 'login':
                     const reason = loginRedirectView ? 'You need to be logged in to perform this action.' : 'Log in to your account to continue.';
                     return <LoginPage setView={setView} onLogin={handleLogin} onSignUp={handleSignUp} reason={reason} />;
@@ -451,6 +513,10 @@ const App: React.FC = () => {
                     const clinicToUpgrade = clinics.find(c => c.ownerId === currentUser?.uid);
                     if (tier && clinicToUpgrade) return <CheckoutPage tier={tier} clinic={clinicToUpgrade} setView={setView} onProcessSubscription={handleProcessSubscription} />;
                     return <PricingPage setView={setView} currentUser={currentUser} clinics={clinics} onCancelSubscription={handleCancelSubscription} />; // Fallback to pricing
+                case 'about': return <AboutUsPage setView={setView} />;
+                case 'contact': return <ContactPage setView={setView} onContactSubmit={handleContactSubmit} />;
+                case 'privacy': return <PrivacyPolicyPage />;
+                case 'terms': return <TermsOfServicePage />;
                 default:
                     return <Home {...commonProps} clinics={clinics} />;
             }
@@ -472,7 +538,7 @@ const App: React.FC = () => {
             <main className="flex-grow">
                 {renderView()}
             </main>
-            <Footer onOpenNewsletterModal={() => setIsNewsletterModalOpen(true)} />
+            <Footer setView={setView} onOpenNewsletterModal={() => setIsNewsletterModalOpen(true)} />
             <NewsletterModal 
                 isOpen={isNewsletterModalOpen}
                 onClose={() => setIsNewsletterModalOpen(false)}

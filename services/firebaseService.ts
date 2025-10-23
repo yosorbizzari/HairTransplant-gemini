@@ -1,5 +1,6 @@
-import { Clinic, BlogPost, ProductReview, ClaimRequest, User, Review, Treatment, City, NewsletterSubscriber, Tier } from '../types';
-import { CLINICS, BLOG_POSTS, PRODUCT_REVIEWS, PENDING_CLAIMS, INITIAL_USERS, PENDING_REVIEWS, TREATMENTS, CITIES, INITIAL_SUBSCRIBERS } from '../constants';
+
+import { Clinic, BlogPost, ProductReview, ClaimRequest, User, Review, Treatment, City, NewsletterSubscriber, Tier, ListingSubmission } from '../types';
+import { CLINICS, BLOG_POSTS, PRODUCT_REVIEWS, PENDING_CLAIMS, INITIAL_USERS, PENDING_REVIEWS, TREATMENTS, CITIES, INITIAL_SUBSCRIBERS, PENDING_SUBMISSIONS } from '../constants';
 
 // --- DEEP CLONE UTILITY ---
 // This is crucial for preventing state mutation bugs in our simulation.
@@ -14,6 +15,7 @@ let db = {
     blogPosts: deepClone(BLOG_POSTS),
     productReviews: deepClone(PRODUCT_REVIEWS),
     pendingClaims: deepClone(PENDING_CLAIMS),
+    pendingSubmissions: deepClone(PENDING_SUBMISSIONS),
     users: deepClone(INITIAL_USERS),
     pendingReviews: deepClone(PENDING_REVIEWS),
     treatments: deepClone(TREATMENTS),
@@ -39,6 +41,7 @@ export const firebaseService = {
             blogPosts: db.blogPosts,
             productReviews: db.productReviews,
             pendingClaims: db.pendingClaims,
+            pendingSubmissions: db.pendingSubmissions,
             users: db.users,
             pendingReviews: db.pendingReviews,
             currentUser: currentAuthUser,
@@ -180,6 +183,61 @@ export const firebaseService = {
         await networkDelay(300);
         db.pendingClaims = db.pendingClaims.filter(c => c.id !== claimId);
         console.log("Firebase Service: Deleted/Denied claim with ID:", claimId);
+    },
+
+    submitListing: async (submissionData: Omit<ListingSubmission, 'id' | 'status'>): Promise<ListingSubmission> => {
+        await networkDelay(400);
+        const newSubmission: ListingSubmission = {
+            ...submissionData,
+            id: Date.now(),
+            status: 'pending',
+        };
+        db.pendingSubmissions = [newSubmission, ...db.pendingSubmissions];
+        console.log("Firebase Service: Submitted new listing for moderation.", newSubmission);
+        return deepClone(newSubmission);
+    },
+
+    approveSubmission: async (submissionId: number): Promise<Clinic> => {
+        await networkDelay(500);
+        const submission = db.pendingSubmissions.find(s => s.id === submissionId);
+        if (!submission) throw new Error("Submission not found.");
+
+        const city = CITIES.find(c => c.name === submission.clinicCity);
+
+        const newClinic: Clinic = {
+            id: Date.now(),
+            name: submission.clinicName,
+            tier: Tier.BASIC,
+            city: submission.clinicCity,
+            country: city ? city.country : '',
+            address: submission.clinicAddress,
+            rating: 0,
+            reviewCount: 0,
+            shortDescription: 'This is a new clinic. Awaiting detailed description.',
+            longDescription: 'This clinic was recently submitted and is awaiting more details. If this is your clinic, please claim this listing to update your profile.',
+            treatments: [],
+            contact: {
+                phone: submission.clinicPhone,
+                website: submission.clinicWebsite,
+            },
+            reviews: [],
+            imageUrl: `https://picsum.photos/800/600?random=${Date.now()}`,
+            verified: false, // Approved but not yet verified by owner
+        };
+        
+        db.clinics = [newClinic, ...db.clinics];
+        db.pendingSubmissions = db.pendingSubmissions.filter(s => s.id !== submissionId);
+
+        console.log("Firebase Service: Approved new listing.", newClinic);
+        // We could simulate sending an email to the submitter via their ID here.
+        
+        return deepClone(newClinic);
+    },
+
+    denySubmission: async (submissionId: number): Promise<void> => {
+        await networkDelay(300);
+        db.pendingSubmissions = db.pendingSubmissions.filter(s => s.id !== submissionId);
+        console.log("Firebase Service: Denied submission with ID:", submissionId);
     },
 
     saveClinic: async (clinicData: Clinic): Promise<Clinic> => {

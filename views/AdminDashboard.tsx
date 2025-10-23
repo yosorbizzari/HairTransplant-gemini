@@ -1,6 +1,7 @@
+
 import React, { useState, useMemo } from 'react';
 import { CITIES, TREATMENTS } from '../constants';
-import { Clinic, View, Tier, BlogPost, ProductReview, ClaimRequest, Review, User, NewsletterSubscriber } from '../types';
+import { Clinic, View, Tier, BlogPost, ProductReview, ClaimRequest, Review, User, NewsletterSubscriber, ListingSubmission } from '../types';
 import { getReviewResponse, getOptimizedContent } from '../services/geminiService';
 import ImageInput from '../components/ImageInput';
 import ClinicEditor from '../components/ClinicEditor';
@@ -12,6 +13,7 @@ interface AdminDashboardProps {
     products: ProductReview[];
     claims: ClaimRequest[];
     pendingReviews: Review[];
+    pendingSubmissions: ListingSubmission[];
     users: User[];
     subscribers: NewsletterSubscriber[];
     onSaveClinic: (clinic: Clinic) => void;
@@ -23,6 +25,8 @@ interface AdminDashboardProps {
     onDenyClaim: (id: number) => void;
     onApproveReview: (id: number) => void;
     onDenyReview: (id: number) => void;
+    onApproveSubmission: (id: number) => void;
+    onDenySubmission: (id: number) => void;
     isSaving: boolean;
 }
 
@@ -158,8 +162,8 @@ const ProductEditor: React.FC<{ product: ProductReview | 'new', onSave: (product
 };
 
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ setView, clinics, blogs, products, claims, pendingReviews, users, subscribers, onSaveClinic, onSaveBlog, onSaveProduct, onDeleteBlog, onDeleteProduct, onApproveClaim, onDenyClaim, onApproveReview, onDenyReview, isSaving }) => {
-    const [activeTab, setActiveTab] = useState('claims');
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ setView, clinics, blogs, products, claims, pendingReviews, pendingSubmissions, users, subscribers, onSaveClinic, onSaveBlog, onSaveProduct, onDeleteBlog, onDeleteProduct, onApproveClaim, onDenyClaim, onApproveReview, onDenyReview, onApproveSubmission, onDenySubmission, isSaving }) => {
+    const [activeTab, setActiveTab] = useState('submissions');
     const [editingClinic, setEditingClinic] = useState<Clinic | 'new' | null>(null);
     const [editingBlog, setEditingBlog] = useState<BlogPost | 'new' | null>(null);
     const [editingProduct, setEditingProduct] = useState<ProductReview | 'new' | null>(null);
@@ -207,6 +211,52 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ setView, clinics, blogs
 
     const renderContent = () => {
         switch (activeTab) {
+            case 'submissions':
+                return (
+                    <div>
+                        <h2 className="text-2xl font-bold mb-4">Pending Submissions</h2>
+                        {pendingSubmissions.length > 0 ? (
+                            <div className="bg-white shadow-md rounded-lg overflow-x-auto">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Clinic Name</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitter</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {pendingSubmissions.map(sub => (
+                                            <tr key={sub.id}>
+                                                <td className="px-6 py-4 whitespace-nowrap font-medium">{sub.clinicName}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                    <div><strong>City:</strong> {sub.clinicCity}</div>
+                                                    <div><strong>Address:</strong> {sub.clinicAddress}</div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                    <div><strong>Phone:</strong> {sub.clinicPhone}</div>
+                                                    <div><strong>Website:</strong> {sub.clinicWebsite}</div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div>{sub.submitterName}</div>
+                                                    <div className="text-sm text-gray-500">ID: {sub.submitterId}</div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-4">
+                                                    <button onClick={() => onApproveSubmission(sub.id)} className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600">Approve</button>
+                                                    <button onClick={() => onDenySubmission(sub.id)} className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600">Deny</button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <p className="text-gray-600">No pending submissions to review.</p>
+                        )}
+                    </div>
+                );
             case 'claims':
                 return (
                     <div>
@@ -492,6 +542,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ setView, clinics, blogs
             <div className="container mx-auto px-6 py-12">
                 <h1 className="text-4xl font-extrabold mb-8">Admin Dashboard</h1>
                 <div className="flex flex-wrap gap-2 border-b mb-8 pb-2">
+                    <TabButton id="submissions" label="Pending Submissions" count={pendingSubmissions.length} />
                     <TabButton id="claims" label="Pending Claims" count={claims.length} />
                     <TabButton id="reviews" label="Pending Reviews" count={pendingReviews.length} />
                     <TabButton id="clinics" label="Manage Clinics" />

@@ -1,5 +1,4 @@
 
-
 export enum Tier {
     BASIC = 'Basic',
     PREMIUM = 'Premium',
@@ -108,6 +107,18 @@ export interface ClaimRequest {
     status: 'pending';
 }
 
+export interface ListingSubmission {
+    id: number;
+    clinicName: string;
+    clinicCity: string;
+    clinicAddress: string;
+    clinicPhone: string;
+    clinicWebsite: string;
+    submitterName: string;
+    submitterId: string;
+    status: 'pending';
+}
+
 export interface NewsletterSubscriber {
     id: number;
     email: string;
@@ -120,6 +131,6 @@ export interface Breadcrumb {
 }
 
 export interface View {
-    page: 'home' | 'directory' | 'clinic' | 'city' | 'admin' | 'pricing' | 'blog' | 'blogDetail' | 'products' | 'productDetail' | 'claimListing' | 'login' | 'writeReview' | 'clinicDashboard' | 'patientDashboard' | 'checkout';
+    page: 'home' | 'directory' | 'clinic' | 'city' | 'admin' | 'pricing' | 'blog' | 'blogDetail' | 'products' | 'productDetail' | 'claimListing' | 'login' | 'writeReview' | 'clinicDashboard' | 'patientDashboard' | 'checkout' | 'submitListing' | 'about' | 'contact' | 'privacy' | 'terms';
     params?: Record<string, any>;
 }

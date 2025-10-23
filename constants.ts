@@ -1,5 +1,5 @@
 
-import { Clinic, City, Treatment, Tier, BlogPost, ProductReview, ProductCategory, ClaimRequest, User, Review, NewsletterSubscriber } from './types';
+import { Clinic, City, Treatment, Tier, BlogPost, ProductReview, ProductCategory, ClaimRequest, User, Review, NewsletterSubscriber, ListingSubmission } from './types';
 
 export const INITIAL_USERS: User[] = [
     { uid: 'admin-001', name: 'Admin User', email: 'admin@transplantify.com', role: 'admin', favoriteClinics: [] },
@@ -899,4 +899,18 @@ export const PENDING_REVIEWS: Review[] = [
 
 export const INITIAL_SUBSCRIBERS: NewsletterSubscriber[] = [
     { id: 1, email: 'early.adopter@email.com', subscribedAt: '2024-01-01' }
+];
+
+export const PENDING_SUBMISSIONS: ListingSubmission[] = [
+    {
+        id: 1,
+        clinicName: 'Test Clinic Submission',
+        clinicCity: 'Miami',
+        clinicAddress: '123 Test Ave, Miami, FL',
+        clinicPhone: '123-456-7890',
+        clinicWebsite: 'testclinic.com',
+        submitterName: 'John D.',
+        submitterId: 'user1',
+        status: 'pending',
+    }
 ];

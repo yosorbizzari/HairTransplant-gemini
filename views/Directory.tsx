@@ -17,10 +17,11 @@ interface DirectoryProps {
     };
 }
 
-const Directory: React.FC<DirectoryProps> = ({ setView, clinics, currentUser, onToggleFavorite, requestLogin, initialFilters = {} }) => {
-    const [searchTerm, setSearchTerm] = useState(initialFilters.searchTerm || '');
-    const [city, setCity] = useState(initialFilters.city || 'All Cities');
-    const [treatment, setTreatment] = useState(initialFilters.treatment || 'Any Treatment');
+const Directory: React.FC<DirectoryProps> = ({ setView, clinics, currentUser, onToggleFavorite, requestLogin, initialFilters }) => {
+    // FIX: Used optional chaining (?.) to safely access properties on the optional `initialFilters` prop.
+    const [searchTerm, setSearchTerm] = useState(initialFilters?.searchTerm || '');
+    const [city, setCity] = useState(initialFilters?.city || 'All Cities');
+    const [treatment, setTreatment] = useState(initialFilters?.treatment || 'Any Treatment');
 
     const filteredClinics = clinics.filter(clinic => {
         const matchesSearch = clinic.name.toLowerCase().includes(searchTerm.toLowerCase()) || clinic.shortDescription.toLowerCase().includes(searchTerm.toLowerCase());
@@ -63,6 +64,20 @@ const Directory: React.FC<DirectoryProps> = ({ setView, clinics, currentUser, on
                         </select>
                     </div>
                 </div>
+
+                {/* Submit Listing CTA */}
+                <div className="text-center mb-10">
+                    <p className="text-gray-700">
+                        Don't see your clinic listed?{' '}
+                        <button 
+                            onClick={() => setView({ page: 'submitListing' })}
+                            className="font-bold text-teal-600 hover:underline"
+                        >
+                            Add it here
+                        </button>
+                    </p>
+                </div>
+
 
                 {/* Clinic List */}
                 {filteredClinics.length > 0 ? (

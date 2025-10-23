@@ -85,6 +85,31 @@ const Home: React.FC<HomeProps> = ({ setView, clinics, currentUser, onToggleFavo
                     </div>
                 </div>
             </div>
+
+            {/* For Clinics CTA Section */}
+            <div className="bg-teal-700">
+                <div className="container mx-auto px-6 py-20 text-center text-white">
+                    <h2 className="text-4xl font-extrabold">Are You a Clinic Owner?</h2>
+                    <p className="mt-4 text-lg text-teal-100 max-w-2xl mx-auto">
+                        Join our directory to reach thousands of patients actively seeking hair restoration solutions. 
+                        Showcase your clinic, manage your reputation, and grow your practice.
+                    </p>
+                    <div className="mt-8 flex justify-center gap-4 flex-wrap">
+                        <button
+                            onClick={() => setView({ page: 'submitListing' })}
+                            className="px-8 py-3 bg-white text-teal-800 font-bold rounded-lg hover:bg-gray-200 transition-colors text-lg shadow-md"
+                        >
+                            Add Your Clinic
+                        </button>
+                        <button
+                            onClick={() => setView({ page: 'pricing' })}
+                            className="px-8 py-3 bg-transparent border-2 border-white text-white font-bold rounded-lg hover:bg-white hover:text-teal-800 transition-colors text-lg"
+                        >
+                            View Plans & Benefits
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };

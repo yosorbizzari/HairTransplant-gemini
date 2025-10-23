@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Clinic, User, View, Review } from '../types';
+import { Clinic, User, View, Review, ListingSubmission } from '../types';
 import ClinicCard from '../components/ClinicCard';
 import StarIcon from '../components/icons/StarIcon';
 
@@ -8,12 +8,13 @@ interface PatientDashboardProps {
     currentUser: User;
     clinics: Clinic[];
     pendingReviews: Review[];
+    pendingSubmissions: ListingSubmission[];
     setView: (view: View) => void;
     onToggleFavorite: (clinicId: number) => void;
     requestLogin: (redirectView: View) => void;
 }
 
-const PatientDashboard: React.FC<PatientDashboardProps> = ({ currentUser, clinics, pendingReviews, setView, onToggleFavorite, requestLogin }) => {
+const PatientDashboard: React.FC<PatientDashboardProps> = ({ currentUser, clinics, pendingReviews, pendingSubmissions, setView, onToggleFavorite, requestLogin }) => {
     const [activeTab, setActiveTab] = useState('saved');
 
     const savedClinics = useMemo(() => {
@@ -25,6 +26,10 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ currentUser, clinic
         const combined = [...pendingReviews, ...allReviews];
         return combined.filter(review => review.userId === currentUser.uid);
     }, [clinics, pendingReviews, currentUser.uid]);
+
+    const userSubmissions = useMemo(() => {
+        return pendingSubmissions.filter(sub => sub.submitterId === currentUser.uid);
+    }, [pendingSubmissions, currentUser.uid]);
 
 
     const renderContent = () => {
@@ -106,6 +111,49 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ currentUser, clinic
                         )}
                     </div>
                 );
+            case 'submissions':
+                return (
+                    <div>
+                        <h2 className="text-2xl font-bold mb-4">My Submissions</h2>
+                        {userSubmissions.length > 0 ? (
+                            <div className="bg-white shadow-md rounded-lg overflow-x-auto">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Clinic Name</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">City</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {userSubmissions.map(sub => (
+                                            <tr key={sub.id}>
+                                                <td className="px-6 py-4 whitespace-nowrap font-medium">{sub.clinicName}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap">{sub.clinicCity}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                     <span className="px-3 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800">
+                                                        {sub.status.charAt(0).toUpperCase() + sub.status.slice(1)}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <div className="text-center py-16 bg-white rounded-lg shadow-md">
+                                <h3 className="text-xl font-semibold text-gray-700">You haven't submitted any clinics yet.</h3>
+                                <p className="text-gray-500 mt-2">Help our directory grow by adding clinics you know.</p>
+                                <button
+                                    onClick={() => setView({ page: 'submitListing' })}
+                                    className="mt-6 px-6 py-2 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 transition-colors"
+                                >
+                                    Submit a New Clinic
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                );
         }
     }
 
@@ -130,6 +178,14 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ currentUser, clinic
                         }`}
                     >
                         My Reviews
+                    </button>
+                     <button
+                        onClick={() => setActiveTab('submissions')}
+                        className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                            activeTab === 'submissions' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-200'
+                        }`}
+                    >
+                        My Submissions
                     </button>
                 </div>
                 <div>{renderContent()}</div>
